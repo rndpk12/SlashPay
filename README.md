@@ -1,18 +1,213 @@
-# Cross Pay
+# Slash Pay
 
-Cross Pay is a secure multi-currency wallet backend with ledger-derived balances, FX quotes, transfers, deposits, withdrawals, and transaction history.
+Slash Pay is a secure full-stack cross-border payments platform for managing multi-currency wallets, FX conversion, deposits, withdrawals, transfers, and transaction history.
 
-[![CI](https://github.com/rndpk12/Cross-Pay/actions/workflows/ci.yml/badge.svg)](https://github.com/rndpk12/Cross-Pay/actions/workflows/ci.yml)
+The platform is built around ledger-backed financial operations, transactional consistency, idempotency, and concurrency-safe money movement.
 
-## CI
+## Tech Stack
 
-GitHub Actions runs on pull requests and pushes to `main`. It uses Java 21 and the Maven Wrapper, executes the complete unit and PostgreSQL 17 Testcontainers integration/concurrency suite, packages the application, and builds the production Docker image with the commit SHA as its tag. Images are validated only; they are not pushed to a registry.
+### Backend
+- Java 21
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- PostgreSQL
+- Flyway
+- Maven
+- Testcontainers
+- Spring Boot Actuator
+- OpenAPI / Swagger
 
-Reproduce the important checks locally from `backend` with `./mvnw clean test`, `./mvnw package`, and `docker build -t crosspay-backend:ci-test .`.
+### Frontend
+- React.js
+- TypeScript
+- Vite
+- Tailwind CSS
+- TanStack Query / Router
 
-## Docker development
+### Infrastructure
+- Docker
+- GitHub Actions
+- Render
+- Vercel
+- PostgreSQL
 
-Prerequisites: Docker and Docker Compose. Copy `.env.example` to `.env`, then replace `DB_PASSWORD` and `JWT_SECRET` with development values; `.env` is ignored and must not be committed.
+---
+
+## Architecture
+
+Slash Pay follows a frontend/API/database architecture:
+
+```text
+User
+  │
+  ▼
+Vercel
+Slash Pay Frontend
+  │
+  │ HTTPS / REST API
+  ▼
+Render
+Spring Boot Backend
+  │
+  ▼
+Managed PostgreSQL
+```
+
+The backend owns financial business logic and remains the source of truth for wallet balances, transactions, FX quotes, and money movement.
+
+---
+
+## Core Features
+
+Slash Pay currently supports:
+
+- User registration and authentication
+- JWT-based authorization
+- Multi-currency wallets
+- Ledger-backed wallet balances
+- Deposits
+- Withdrawals
+- Cross-currency transfers
+- FX rates and quotes
+- FX quote lifecycle management
+- Transaction history
+- Idempotent financial operations
+- Concurrency-safe transaction processing
+- OpenAPI / Swagger documentation
+- Health and readiness monitoring
+- Request correlation and structured logging
+
+---
+
+## Transaction Safety
+
+Financial operations are executed transactionally.
+
+### Deposits and Withdrawals
+
+Transaction creation, ledger mutation, and transaction completion occur atomically.
+
+### Transfers
+
+Transfers atomically coordinate:
+
+- Transaction creation
+- Source wallet debit
+- Destination wallet credit
+- FX quote consumption
+- Ledger entries
+- Transaction completion
+
+Failures during processing roll back preceding transaction, ledger, wallet, and quote mutations.
+
+Slash Pay additionally uses:
+
+- Idempotency keys
+- Database transactions
+- Pessimistic locking
+- Deterministic account-lock ordering
+- Database uniqueness constraints
+- Foreign-key constraints
+- Positive-amount constraints
+
+These mechanisms protect against duplicate requests, concurrent updates, race conditions, and inconsistent financial state.
+
+---
+
+## Testing
+
+The backend contains **96+ automated tests** covering unit, integration, security, API documentation, transaction, and concurrency behavior.
+
+PostgreSQL 17 Testcontainers are used for integration tests so database behavior is tested against a real PostgreSQL instance rather than an in-memory substitute.
+
+Coverage includes:
+
+- Authentication
+- Wallet operations
+- Deposits
+- Withdrawals
+- Transfers
+- FX quotes
+- Transaction history
+- Idempotency races
+- Conflicting idempotency keys
+- Concurrent financial operations
+- Reverse-direction transfers
+- FX quote consumption races
+- Ledger invariants
+- Transaction rollback behavior
+- Security behavior
+- OpenAPI documentation
+- Application context startup
+
+Run the complete backend test suite:
+
+```sh
+cd backend
+./mvnw clean test
+```
+
+Package the application:
+
+```sh
+./mvnw package
+```
+
+---
+
+## CI/CD
+
+GitHub Actions runs on pull requests and pushes to `main`.
+
+The CI pipeline:
+
+1. Checks out the repository
+2. Configures Temurin Java 21
+3. Enables Maven dependency caching
+4. Verifies the Maven Wrapper
+5. Runs the complete automated test suite
+6. Runs PostgreSQL Testcontainers integration/concurrency tests
+7. Packages the Spring Boot application
+8. Builds the production Docker image
+
+Docker images built during CI are currently validated but are not pushed to a container registry.
+
+Important checks can be reproduced locally:
+
+```sh
+cd backend
+
+./mvnw clean test
+./mvnw package
+docker build -t slashpay-backend:ci-test .
+```
+
+---
+
+## Docker Development
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+Copy the environment template:
+
+```sh
+cp .env.example .env
+```
+
+Replace development values such as:
+
+```text
+DB_PASSWORD
+JWT_SECRET
+```
+
+with secure local values.
+
+`.env` is ignored by Git and must never be committed.
 
 Start the complete local stack from the repository root:
 
@@ -20,43 +215,368 @@ Start the complete local stack from the repository root:
 docker compose up --build
 ```
 
-The backend is available at `http://localhost:8080`, PostgreSQL is available to the host at `localhost:5432`, Swagger is at `http://localhost:8080/swagger-ui.html`, and health is at `http://localhost:8080/actuator/health`. Set `BACKEND_PORT` only when port 8080 is already in use. Inside Compose, the backend reaches PostgreSQL at `postgres:5432`; Flyway applies the packaged migrations before the application serves requests.
+By default:
 
-Stop it with `docker compose down`. PostgreSQL development data persists in the `crosspay_postgres_data` named volume. Use `docker compose down -v` only when you intentionally want to delete that local database data.
+```text
+Backend
+http://localhost:8080
 
-## Render deployment foundation
+PostgreSQL
+localhost:5432
 
-This repository is ready for manual Docker deployment to Render; it has not been deployed by this project. Create a managed PostgreSQL database, then create a Render Web Service from this repository using the backend Dockerfile. Render terminates HTTPS at its proxy, forwards requests to the container, and the container connects to managed PostgreSQL:
+Swagger UI
+http://localhost:8080/swagger-ui.html
 
-`Client → HTTPS → Render Web Service → Cross Pay container → managed PostgreSQL`
+Health
+http://localhost:8080/actuator/health
+```
 
-Set `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (32+ bytes), `JWT_EXPIRATION`, and an exact `CORS_ALLOWED_ORIGINS` frontend origin. Render normally provides `PORT` (default `10000`); `SERVER_PORT` remains supported as an explicit override. Configure `/actuator/health` as the health check. The production profile runs Flyway and keeps Hibernate at `validate`; health details and sensitive Actuator endpoints remain unavailable.
+Inside Docker Compose, the backend communicates with PostgreSQL through:
 
-Render dashboard settings: create a **Web Service**, connect the `main` branch, choose the **Docker** runtime with root directory `backend`, leave Docker Command empty so the image `ENTRYPOINT` runs, select a region close to the managed database, enable auto-deploy only when desired, and set the health-check path to `/actuator/health`. Use the smallest instance only for demos; a single instance is not highly available. Do not configure build-time secrets: Render makes Docker-service variables available as build arguments, and this Dockerfile deliberately does not consume secret build arguments.
+```text
+postgres:5432
+```
 
-After deployment, check the service logs for Flyway startup, then verify `/actuator/health`, `/actuator/health/readiness`, `/actuator/health/liveness`, `/swagger-ui.html`, `/v3/api-docs`, an unauthenticated protected endpoint (`401`), and an authenticated API flow. Use a dedicated, non-public managed database user with TLS when the provider supports it; never reuse local credentials.
+Flyway applies database migrations before the application begins serving requests.
 
-Deployment checklist: create PostgreSQL; configure all variables; configure Docker and health check; deploy; verify Flyway, health probes, Swagger/OpenAPI, `401` protection, and authenticated access. Cloud logs retain safe request IDs and operation events, never credentials or request bodies.
+Stop the stack with:
 
-## API documentation
+```sh
+docker compose down
+```
 
-When the backend is running locally, interactive documentation is available at [Swagger UI](http://localhost:8080/swagger-ui.html). The OpenAPI JSON document is available at [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs).
+PostgreSQL development data persists in the `crosspay_postgres_data` named volume.
 
-Register or log in through the public authentication endpoints, then use **Authorize** in Swagger UI with the returned JWT. Protected endpoints require `Authorization: Bearer <token>`.
+Use:
 
-Endpoint groups include Authentication, Users, Wallets, FX Rates/Quotes, Transfers, Deposits, Withdrawals, and Transactions. Deposits, withdrawals, and transfers also require an `Idempotency-Key` request header so safe retries cannot duplicate financial operations.
+```sh
+docker compose down -v
+```
+
+only when you intentionally want to delete local database data.
+
+---
+
+## Production Deployment
+
+Slash Pay uses separate frontend and backend deployments.
+
+### Frontend
+
+The React/Vite frontend is deployed on **Vercel**.
+
+The production frontend communicates with the backend using:
+
+```text
+VITE_API_BASE_URL
+```
+
+Only public frontend configuration should use `VITE_*` variables.
+
+Database credentials, JWT secrets, and other backend secrets must never be exposed through frontend environment variables.
+
+### Backend
+
+The Spring Boot backend is deployed as a Docker Web Service on **Render**.
+
+Production architecture:
+
+```text
+Browser
+   │
+   │ HTTPS
+   ▼
+Vercel
+Slash Pay Frontend
+   │
+   │ HTTPS REST API
+   ▼
+Render
+Spring Boot API
+   │
+   │ JDBC
+   ▼
+Managed PostgreSQL
+```
+
+Render terminates HTTPS at its proxy and forwards requests to the application container.
+
+The backend runs with:
+
+```text
+SPRING_PROFILES_ACTIVE=prod
+```
+
+Required production environment variables include:
+
+```text
+DB_URL
+DB_USERNAME
+DB_PASSWORD
+JWT_SECRET
+JWT_EXPIRATION
+CORS_ALLOWED_ORIGINS
+```
+
+Render supplies `PORT` for the application server. `SERVER_PORT` remains available as an explicit override.
+
+The production profile:
+
+- Runs Flyway migrations
+- Uses Hibernate schema validation
+- Requires environment-driven secrets
+- Restricts CORS
+- Restricts Actuator exposure
+- Runs inside a non-root Docker container
+
+The Render health-check path is:
+
+```text
+/actuator/health
+```
+
+---
+
+## API Documentation
+
+When running locally:
+
+**Swagger UI**
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+**OpenAPI specification**
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+Public authentication endpoints allow users to register and log in.
+
+After authentication, protected endpoints require:
+
+```http
+Authorization: Bearer <token>
+```
+
+Swagger's **Authorize** functionality can be used to provide the JWT.
+
+API groups include:
+
+- Authentication
+- Users
+- Wallets
+- FX Rates
+- FX Conversion
+- FX Quotes
+- Transfers
+- Deposits
+- Withdrawals
+- Transactions
+
+Deposits, withdrawals, and transfers additionally require:
+
+```http
+Idempotency-Key: <unique-key>
+```
+
+This allows requests to be retried safely without duplicating financial operations.
+
+---
 
 ## Observability
 
-- `GET /actuator/health` is public and intentionally returns only the overall status. It includes database health internally without exposing connection details. Liveness and readiness groups are available at `/actuator/health/liveness` and `/actuator/health/readiness` for future deployment health checks.
-- `GET /actuator/metrics` is available only to authenticated callers. It includes standard HTTP, JVM, and Hikari connection-pool metrics plus safe Cross Pay operation counters such as `crosspay.transfer.success`. Sensitive management endpoints (including `env`, `configprops`, heap dumps, and thread dumps) are not exposed.
-- Clients may send a safe, 1–64 character `X-Request-Id` (letters, numbers, `.`, `_`, and `-`). The service returns it on every response; absent or unsafe values are replaced with a generated UUID. Logs include this ID, HTTP metadata, and financial operation outcomes.
-- Logs never contain passwords, password hashes, JWTs, Authorization headers, JWT/database secrets, idempotency keys, request/response bodies, or raw monetary amounts. Financial counters have no high-cardinality user, transaction, request, amount, or idempotency labels; the ledger remains the source of truth.
+Slash Pay includes application-level observability without exposing sensitive financial information.
+
+### Health
+
+Public health endpoints:
+
+```text
+GET /actuator/health
+GET /actuator/health/liveness
+GET /actuator/health/readiness
+```
+
+Database connectivity contributes to readiness while connection details remain hidden.
+
+### Metrics
+
+```text
+GET /actuator/metrics
+```
+
+is restricted to authenticated callers.
+
+Metrics include:
+
+- HTTP request metrics
+- JVM metrics
+- HikariCP connection-pool metrics
+- Deposit operation counters
+- Withdrawal operation counters
+- Transfer operation counters
+- FX quote lifecycle counters
+
+### Request Correlation
+
+Clients may provide:
+
+```http
+X-Request-Id
+```
+
+Valid request IDs are returned in the response.
+
+If a request ID is absent or invalid, Slash Pay generates a UUID.
+
+This enables individual requests to be correlated across application logs.
+
+### Logging
+
+Logs may contain:
+
+- Request IDs
+- HTTP metadata
+- Response status
+- Request duration
+- Financial operation outcomes
+
+Logs intentionally exclude:
+
+- Passwords
+- Password hashes
+- JWTs
+- Authorization headers
+- JWT secrets
+- Database credentials
+- Idempotency keys
+- Request/response bodies
+- Raw monetary amounts
+
+---
 
 ## Security
 
-The API uses short-lived, HS256-signed JWT bearer tokens and Argon2 password hashes; it is stateless, so CSRF remains disabled because authentication is sent by an explicit bearer header rather than a browser session cookie. Authenticated operations derive identity from the JWT and use ownership-scoped resource lookups. Idempotency, database transactions, and pessimistic locks protect financial state transitions.
+Slash Pay uses stateless JWT bearer authentication.
 
-JWT and database secrets are environment-driven, the Docker runtime uses the non-root `crosspay` user, and only public health probes plus authenticated metrics are exposed through Actuator. Browser cross-origin access is denied by default; configure the comma-separated `CORS_ALLOWED_ORIGINS` environment variable for explicitly trusted frontend origins. Standard security headers include content-type protection, frame protection, cache controls, and a no-referrer policy.
+Security controls include:
 
-Distributed login rate limiting, token revocation, and refresh-token support are intentionally deferred because they require a shared security-state design; no in-process limiter is presented as a multi-instance control.
+- HS256 JWT signing
+- Minimum 32-byte JWT secret
+- JWT expiration validation
+- Signature validation
+- UUID subject validation
+- Argon2 password hashing
+- Ownership-scoped resource access
+- Idempotent financial operations
+- Database transactions
+- Pessimistic locking
+- Deterministic account-lock ordering
+- Explicit CORS configuration
+- HTTP security headers
+- 16 KB HTTP header limit
+- Non-root Docker execution
+- Restricted Actuator exposure
+- Environment-driven secrets
+
+Browser cross-origin access is denied by default.
+
+Trusted frontend origins must be explicitly configured through:
+
+```text
+CORS_ALLOWED_ORIGINS
+```
+
+CSRF protection remains disabled because authentication is stateless and sent through an explicit bearer token rather than a browser session cookie.
+
+Distributed login rate limiting, token revocation, and refresh-token support are intentionally deferred because they require shared security state suitable for multi-instance deployment.
+
+---
+
+## Repository Structure
+
+```text
+SlashPay/
+├── backend/
+│   ├── src/
+│   │   ├── main/
+│   │   └── test/
+│   ├── Dockerfile
+│   ├── pom.xml
+│   └── mvnw
+│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
+├── docker-compose.yml
+├── .env.example
+└── README.md
+```
+
+---
+
+## Local Development
+
+### Backend
+
+```sh
+cd backend
+./mvnw spring-boot:run
+```
+
+### Frontend
+
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+The Vite development server will display the local frontend URL in the terminal.
+
+Configure the frontend API endpoint through:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+For production, set this variable to the deployed Render backend URL.
+
+---
+
+## Project Status
+
+Slash Pay currently includes:
+
+- Full-stack frontend and backend
+- Multi-currency wallet infrastructure
+- Ledger-backed financial operations
+- FX quote and conversion workflows
+- Deposits and withdrawals
+- Cross-currency transfers
+- Transaction history
+- JWT authentication
+- Idempotency protection
+- Concurrency-safe financial processing
+- PostgreSQL integration
+- Flyway migrations
+- 96+ automated tests
+- PostgreSQL Testcontainers
+- OpenAPI documentation
+- Application observability
+- Docker containerization
+- GitHub Actions CI/CD
+- Render backend deployment
+- Vercel frontend deployment
+
+The next phase focuses on integrating and refining the production frontend-to-backend workflow and continuing product-level improvements.
