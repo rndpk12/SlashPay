@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   ArrowRight,
@@ -20,6 +20,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SlashPayBrand } from "@/components/slash-pay-brand";
 import globeImage from "@/assets/globe-coins.jpg";
 import lockImage from "@/assets/security-lock.jpg";
 import phoneImage from "@/assets/phone-travel.jpg";
@@ -204,15 +205,15 @@ function WisePage() {
           <div className="flex items-center gap-8">
             <a
               href="#top"
-              className="text-[28px] font-black italic text-brand-ink"
+              className="block w-[164px]"
               aria-label="Slash Pay home"
             >
-              ➤Slash Pay
+              <SlashPayBrand className="h-auto w-full" />
             </a>
           </div>
           <div className="hidden items-center gap-4 text-sm font-medium md:flex">
-            <Button variant="ghost" size="sm">
-              Log in
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/login">Log in</Link>
             </Button>
             <Button variant="outline" size="sm">
               Sign up
@@ -433,7 +434,7 @@ function WisePage() {
       <footer className="border-t border-border bg-surface py-16">
         <div className="page-shell">
           <div className="flex items-center justify-between">
-            <span className="text-5xl font-black italic">➤Slash Pay</span>
+            <SlashPayBrand className="h-auto w-[245px]" />
             <div className="flex gap-5">
               <span className="font-black">f</span>
               <X />

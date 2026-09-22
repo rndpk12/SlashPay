@@ -1,10 +1,10 @@
 import { n as require_jsx_runtime, t as QueryClientProvider } from "../_libs/react+tanstack__react-query.mjs";
-import "./button-CCKletB4.mjs";
 import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter, h as Link, m as createRootRouteWithContext, p as createFileRoute, s as Scripts, u as createRouter } from "../_libs/@tanstack/react-router+[...].mjs";
+import "./button-CCKletB4.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-pbCLQebK.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-B2UYI9cy.js
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-DPZ7YwmK.css";
+var styles_default = "/assets/styles-BoE-WOxs.css";
 function NotFoundComponent() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "flex min-h-screen items-center justify-center bg-background px-4",
@@ -70,7 +70,7 @@ function ErrorComponent({ error, reset }) {
 		})
 	});
 }
-var Route$1 = createRootRouteWithContext()({
+var Route$2 = createRootRouteWithContext()({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
@@ -128,8 +128,8 @@ var Route$1 = createRootRouteWithContext()({
 			},
 			{
 				rel: "icon",
-				href: "/favicon.ico",
-				type: "image/x-icon"
+				href: "/slash-pay.svg",
+				type: "image/svg+xml"
 			}
 		]
 	}),
@@ -145,14 +145,14 @@ function RootShell({ children }) {
 	});
 }
 function RootComponent() {
-	const { queryClient } = Route$1.useRouteContext();
+	const { queryClient } = Route$2.useRouteContext();
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QueryClientProvider, {
 		client: queryClient,
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
 	});
 }
-var $$splitComponentImporter = () => import("./routes-B6C8FvEG.mjs");
-var rootRouteChildren = { IndexRoute: createFileRoute("/")({
+var $$splitComponentImporter$1 = () => import("./routes-XUGN6ras.mjs");
+var Route$1 = createFileRoute("/")({
 	head: () => ({ meta: [
 		{ title: "Slash Pay: The international account" },
 		{
@@ -176,13 +176,29 @@ var rootRouteChildren = { IndexRoute: createFileRoute("/")({
 			content: "summary_large_image"
 		}
 	] }),
+	component: lazyRouteComponent($$splitComponentImporter$1, "component")
+});
+var $$splitComponentImporter = () => import("./login-U_USbe1P.mjs");
+var Route = createFileRoute("/login")({
+	head: () => ({ meta: [{ title: "Log in | Slash Pay" }, {
+		name: "description",
+		content: "Log in to your Slash Pay account."
+	}] }),
 	component: lazyRouteComponent($$splitComponentImporter, "component")
-}).update({
-	id: "/",
-	path: "/",
-	getParentRoute: () => Route$1
-}) };
-var routeTree = Route$1._addFileChildren(rootRouteChildren)._addFileTypes();
+});
+var rootRouteChildren = {
+	IndexRoute: Route$1.update({
+		id: "/",
+		path: "/",
+		getParentRoute: () => Route$2
+	}),
+	LoginRoute: Route.update({
+		id: "/login",
+		path: "/login",
+		getParentRoute: () => Route$2
+	})
+};
+var routeTree = Route$2._addFileChildren(rootRouteChildren)._addFileTypes();
 var getRouter = () => {
 	const queryClient = new QueryClient();
 	return createRouter({

@@ -377,6 +377,21 @@ var ShieldCheck = createLucideIcon("shield-check", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var UserRound = createLucideIcon("user-round", [["circle", {
+	cx: "12",
+	cy: "8",
+	r: "5",
+	key: "1hypcn"
+}], ["path", {
+	d: "M20 21a8 8 0 0 0-16 0",
+	key: "rfgkzh"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Users = createLucideIcon("users", [
 	["path", {
 		d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",
@@ -424,4 +439,4 @@ var Youtube = createLucideIcon("youtube", [["path", {
 	key: "1jp15x"
 }]]);
 //#endregion
-export { Search as a, LockKeyhole as c, Headphones as d, Clock3 as f, ArrowRight as g, BriefcaseBusiness as h, ShieldCheck as i, Landmark as l, Building2 as m, X as n, ReceiptText as o, ChevronDown as p, Users as r, Menu as s, Youtube as t, Instagram as u };
+export { ArrowRight as _, ShieldCheck as a, Menu as c, Instagram as d, Headphones as f, BriefcaseBusiness as g, Building2 as h, UserRound as i, LockKeyhole as l, ChevronDown as m, X as n, Search as o, Clock3 as p, Users as r, ReceiptText as s, Youtube as t, Landmark as u };

@@ -1,9 +1,11 @@
 import { n as __toESM } from "../_runtime.mjs";
-import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
+import { t as SlashPayBrand } from "./slash-pay-brand-BU87sMKa.mjs";
+import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
+import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { _ as ArrowRight, a as ShieldCheck, c as Menu, d as Instagram, f as Headphones, g as BriefcaseBusiness, h as Building2, l as LockKeyhole, m as ChevronDown, n as X, o as Search, p as Clock3, r as Users, s as ReceiptText, t as Youtube, u as Landmark } from "../_libs/lucide-react.mjs";
 import { t as Button } from "./button-CCKletB4.mjs";
-import { a as Search, c as LockKeyhole, d as Headphones, f as Clock3, g as ArrowRight, h as BriefcaseBusiness, i as ShieldCheck, l as Landmark, m as Building2, n as X, o as ReceiptText, p as ChevronDown, r as Users, s as Menu, t as Youtube, u as Instagram } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-B6C8FvEG.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-XUGN6ras.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var globe_coins_default = "/assets/globe-coins-BAPHEfkI.jpg";
@@ -293,9 +295,9 @@ function WisePage() {
 							className: "flex items-center gap-8",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 								href: "#top",
-								className: "text-[28px] font-black italic text-brand-ink",
+								className: "block w-[164px]",
 								"aria-label": "Slash Pay home",
-								children: "➤Slash Pay"
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SlashPayBrand, { className: "h-auto w-full" })
 							})
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -303,7 +305,11 @@ function WisePage() {
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 								variant: "ghost",
 								size: "sm",
-								children: "Log in"
+								asChild: true,
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+									to: "/login",
+									children: "Log in"
+								})
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 								variant: "outline",
 								size: "sm",
@@ -605,10 +611,7 @@ function WisePage() {
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex items-center justify-between",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "text-5xl font-black italic",
-								children: "➤Slash Pay"
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SlashPayBrand, { className: "h-auto w-[245px]" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "flex gap-5",
 								children: [
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
