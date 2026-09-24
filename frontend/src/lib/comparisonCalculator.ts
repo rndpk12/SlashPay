@@ -49,12 +49,12 @@ function getTransferFee(
   switch (provider.feeModel) {
     case "fixed":
       return provider.fixedFeeInr
-        ? provider.fixedFeeInr / source.usdRate / 0.0104651
+        ? (provider.fixedFeeInr * 0.0104651) / source.usdRate
         : 0;
     case "paypal":
       return (
         amount * (provider.feePercent ?? 0) +
-        PAYPAL_FIXED_FEE_INR / source.usdRate / 0.0104651
+        (PAYPAL_FIXED_FEE_INR * 0.0104651) / source.usdRate
       );
     case "skydo": {
       const amountInUsd = amount * source.usdRate;

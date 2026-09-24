@@ -21,10 +21,24 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SlashPayBrand } from "@/components/slash-pay-brand";
+import {
+  calculateComparison,
+  formatMoney,
+  formatRate,
+  parseAmount,
+} from "@/lib/comparisonCalculator";
+import {
+  comparisonProviders,
+  supportedCurrencies,
+  type CurrencyCode,
+} from "@/lib/comparisonProviders";
 import globeImage from "@/assets/globe-coins.jpg";
 import lockImage from "@/assets/security-lock.jpg";
 import phoneImage from "@/assets/phone-travel.jpg";
 import paidImage from "@/assets/get-paid.jpg";
+import skydoLogo from "@/assets/skydo-logo.avif";
+import wiseLogo from "@/assets/wise-logo.png";
+import paypalLogo from "@/assets/paypal-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -63,46 +77,6 @@ const trustItems = [
     icon: Headphones,
     title: "24/7 customer support",
     text: "Get help from thousands of specialists any time over email, phone and chat",
-  },
-];
-
-const providers = [
-  {
-    name: "Slash Pay",
-    mark: "SP",
-    recipient: "Calculated",
-    exchangeRate: "Slash Pay rate",
-    markup: "Your actual pricing",
-    fee: "Your actual fee",
-    total: "Calculated",
-    best: true,
-  },
-  {
-    name: "PayPal",
-    mark: "P",
-    recipient: "Calculated",
-    exchangeRate: "PayPal transaction rate",
-    markup: "3% or 4%, depending on conversion type",
-    fee: "4.40% + fixed fee for international commercial receipts",
-    total: "Calculated",
-  },
-  {
-    name: "Skydo",
-    mark: "S",
-    recipient: "Calculated",
-    exchangeRate: "Mid-market",
-    markup: "0%",
-    fee: "$19 / $29 / 0.3% + GST depending on amount",
-    total: "Calculated",
-  },
-  {
-    name: "Wise",
-    mark: "W",
-    recipient: "Calculated",
-    exchangeRate: "Mid-market",
-    markup: "0%",
-    fee: "From 0.33%, varies by currency",
-    total: "Calculated",
   },
 ];
 
@@ -828,32 +802,61 @@ function ComparisonTable({
   amount: string;
   setAmount: (value: string) => void;
 }) {
+  const [sourceCode, setSourceCode] = useState<CurrencyCode>("EUR");
+  const [destinationCode, setDestinationCode] = useState<CurrencyCode>("USD");
+  const source = supportedCurrencies.find(
+    (currency) => currency.code === sourceCode,
+  )!;
+  const destination = supportedCurrencies.find(
+    (currency) => currency.code === destinationCode,
+  )!;
+  const transferAmount = parseAmount(amount);
+  const comparisons = comparisonProviders.map((provider) =>
+    calculateComparison(
+      {
+        amount: transferAmount,
+        source: source.code,
+        destination: destination.code,
+      },
+      source,
+      destination,
+      provider,
+    ),
+  );
+
   return (
-    <div className="mt-10 overflow-x-auto rounded-[10px] bg-card p-5 text-left text-card-foreground shadow-[var(--shadow-elevated)] sm:p-8">
-      <div className="grid min-w-[850px] grid-cols-3 gap-5">
-        <label className="text-xs font-bold">
-          Amount
+    <div className="mt-8 overflow-x-auto rounded-[10px] bg-card p-4 text-left text-card-foreground shadow-[var(--shadow-elevated)] sm:p-6">
+      <div className="grid min-w-[820px] grid-cols-3 gap-8">
+        <div className="flex items-center gap-3">
+          <span className="whitespace-nowrap text-lg font-bold text-obsidian">Send</span>
+          <CurrencyControl
+            label="Send currency"
+            value={sourceCode}
+            onChange={setSourceCode}
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="whitespace-nowrap text-lg font-bold text-obsidian">Receive</span>
+          <CurrencyControl
+            label="Receive currency"
+            value={destinationCode}
+            onChange={setDestinationCode}
+          />
+        </div>
+        <label className="flex items-center gap-3 text-lg font-bold text-obsidian">
+          <span>Amount</span>
           <input
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="mt-2 h-12 w-full rounded-[10px] border border-input px-4 text-base font-normal outline-none focus:border-brand-ink"
+            onChange={(event) => setAmount(event.target.value)}
+            inputMode="decimal"
+            aria-label="Amount to send"
+            className="h-12 w-[150px] flex-none rounded-full border-0 bg-surface px-5 text-lg font-bold tabular-nums text-charcoal outline-none transition focus-visible:ring-2 focus-visible:ring-brand-ink"
           />
         </label>
-        <label className="text-xs font-bold">
-          From
-          <div className="mt-2 flex h-12 items-center justify-between rounded-[10px] border border-input px-4 text-base font-normal">
-            🇪🇺 EUR Euro <ChevronDown size={16} />
-          </div>
-        </label>
-        <label className="text-xs font-bold">
-          To
-          <div className="mt-2 flex h-12 items-center justify-between rounded-[10px] border border-input px-4 text-base font-normal">
-            🇺🇸 USD United States dollar <ChevronDown size={16} />
-          </div>
-        </label>
       </div>
-      <div className="mt-7 grid min-w-[960px] grid-cols-[165px_repeat(4,1fr)]">
-        <div className="space-y-7 pt-[87px] text-sm text-pebble">
+      <div className="mt-5 grid min-w-[820px] grid-cols-[140px_repeat(4,1fr)]">
+        <div className="grid grid-rows-[88px_repeat(5,56px)] items-center py-4 text-xs text-pebble">
+          <div />
           <p>
             Recipient gets
             <br />
@@ -864,35 +867,31 @@ function ComparisonTable({
           <p>Transfer fee</p>
           <p>Total transfer cost</p>
         </div>
-        {providers.map((provider) => (
-          <div
-            key={provider.name}
-            className={`space-y-7 px-4 py-5 text-center text-sm ${provider.best ? "rounded-[10px] bg-primary" : ""}`}
-          >
-            <div className="h-10 font-semibold">
-              <span className="mx-auto mb-2 grid h-8 w-8 place-items-center rounded-full bg-brand-ink text-xs text-brand-lime">
-                {provider.mark}
-              </span>
-              {provider.name}
-            </div>
-            <strong
-              className={provider.best ? "text-brand-ink" : "text-brand-red"}
+        {comparisonProviders.map((provider, index) => {
+          const comparison = comparisons[index]!;
+
+          return (
+            <div
+              key={provider.name}
+              className={`grid grid-rows-[88px_repeat(5,56px)] items-center px-3 py-4 text-center text-xs ${provider.highlighted ? "rounded-[10px] bg-primary" : ""}`}
             >
-              {provider.recipient}
-            </strong>
-            <p>{provider.exchangeRate}</p>
-            <p>{provider.markup}</p>
-            <p>{provider.fee}</p>
-            <p>{provider.total}</p>
-          </div>
-        ))}
+              <div className="font-semibold">
+                <ProviderLogo providerId={provider.id} name={provider.name} />
+                {provider.name}
+              </div>
+              <strong
+                className={provider.highlighted ? "text-brand-ink" : "text-brand-red"}
+              >
+                {formatMoney(comparison.recipientGets, destination.code)}
+              </strong>
+              <p>{formatRate(comparison.effectiveRate)}</p>
+              <p>{formatMoney(comparison.markupAmount, source.code)}</p>
+              <p>{formatMoney(comparison.transferFee, source.code)}</p>
+              <p>{formatMoney(comparison.totalTransferCost, source.code)}</p>
+            </div>
+          );
+        })}
       </div>
-      <Button
-        variant="link"
-        className="mt-6 w-full border-t border-border pt-5 text-sm"
-      >
-        Show more providers
-      </Button>
     </div>
   );
 }
@@ -978,5 +977,83 @@ function Story({
         </div>
       </div>
     </article>
+  );
+}
+
+function ProviderLogo({
+  providerId,
+  name,
+}: {
+  providerId: string;
+  name: string;
+}) {
+  const logoSources: Record<string, string> = {
+    paypal: paypalLogo,
+    skydo: skydoLogo,
+    wise: wiseLogo,
+  };
+
+  if (providerId === "slash-pay") {
+    return (
+      <span
+        aria-label={name}
+        className="mx-auto mb-1 grid h-9 w-9 place-items-center overflow-hidden bg-obsidian"
+      >
+        <svg viewBox="0 0 40 40" aria-hidden="true" className="h-full w-full">
+          <polygon points="11,34 21,34 31,6 22,6" fill="#FDFCFA" />
+          <rect
+            x="25"
+            y="4"
+            width="8"
+            height="8"
+            transform="rotate(-8 29 8)"
+            fill="#9FE870"
+          />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className="mx-auto mb-1 grid h-9 w-9 overflow-hidden bg-white">
+      <img
+        src={logoSources[providerId]}
+        alt={name}
+        className={`h-full w-full object-contain p-1 ${providerId === "skydo" || providerId === "wise" ? "scale-125" : ""}`}
+      />
+    </span>
+  );
+}
+
+function CurrencyControl({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: CurrencyCode;
+  onChange: (value: CurrencyCode) => void;
+}) {
+  return (
+    <label className="relative block w-[150px]">
+      <span className="sr-only">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value as CurrencyCode)}
+        aria-label={label}
+        className="h-12 w-full appearance-none rounded-full border-0 bg-surface px-4 pr-9 text-lg font-bold text-charcoal outline-none transition hover:bg-brand-mist focus-visible:ring-2 focus-visible:ring-brand-ink"
+      >
+        {supportedCurrencies.map((currency) => (
+          <option key={currency.code} value={currency.code}>
+            {currency.flag} {currency.code} {currency.name}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        size={16}
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"
+      />
+    </label>
   );
 }

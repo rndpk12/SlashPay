@@ -15,7 +15,7 @@ import {
   type ProviderPricing,
 } from "@/lib/comparisonProviders";
 
-const defaultSource: CurrencyCode = "INR";
+const defaultSource: CurrencyCode = "EUR";
 const defaultDestination: CurrencyCode = "USD";
 
 function currencyFor(code: CurrencyCode): Currency {

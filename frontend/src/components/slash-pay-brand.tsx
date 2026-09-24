@@ -24,7 +24,7 @@ export function SlashPayBrand({
         width="18"
         height="18"
         transform="rotate(-8 81 16)"
-        fill="#FF3D1A"
+        fill="#9FE870"
       />
       <line
         x1="150"
@@ -47,7 +47,7 @@ export function SlashPayBrand({
       <text
         x="345"
         y="73"
-        fill="#FF3D1A"
+        fill="#9FE870"
         fontFamily="Arial Black, Arial, sans-serif"
         fontSize="48"
         fontWeight="900"
