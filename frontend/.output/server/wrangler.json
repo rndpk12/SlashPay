@@ -1,5 +1,5 @@
 {
-  "compatibility_date": "2026-09-22",
+  "compatibility_date": "2026-09-24",
   "main": "index.mjs",
   "assets": {
     "binding": "ASSETS",

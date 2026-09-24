@@ -8,7 +8,10 @@ import { SlashPayBrand } from "@/components/slash-pay-brand";
 import googleLogo from "@/assets/google-logo-v2.webp";
 
 const GoogleIcon = () => (
-  <span className="relative block h-7 w-7 shrink-0 overflow-hidden" aria-hidden="true">
+  <span
+    className="relative block h-7 w-7 shrink-0 overflow-hidden"
+    aria-hidden="true"
+  >
     <img
       src={googleLogo}
       alt=""
@@ -24,31 +27,122 @@ export default function Login2() {
   const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
   async function signIn(provider: "password" | "google") {
-    setError(""); setLoading(true);
+    setError("");
+    setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 450));
-    if (provider === "password" && (!email.trim() || password.length < 6)) { setError("Enter a valid email and a password with at least 6 characters."); setLoading(false); return; }
+    if (provider === "password" && (!email.trim() || password.length < 6)) {
+      setError(
+        "Enter a valid email and a password with at least 6 characters.",
+      );
+      setLoading(false);
+      return;
+    }
     sessionStorage.setItem("slashpay-auth", "signed-in");
     navigate({ to: "/dashboard" });
   }
-  function submit(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); void signIn("password"); }
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void signIn("password");
+  }
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="flex min-h-screen flex-col justify-center px-6 py-10 lg:px-10">
         <div className="mx-auto w-full max-w-md">
-          <Link to="/" className="inline-block w-40" aria-label="Back to Slash Pay home"><SlashPayBrand /></Link>
-          <h1 className="mt-8 text-2xl font-semibold">Sign in to your account</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Don&apos;t have an account? <button className="font-medium text-primary hover:opacity-80" type="button">Sign up</button></p>
+          <Link
+            to="/"
+            className="inline-block w-40"
+            aria-label="Back to Slash Pay home"
+          >
+            <SlashPayBrand />
+          </Link>
+          <h1 className="mt-8 text-2xl font-semibold">
+            Sign in to your account
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <button
+              className="font-medium text-primary hover:opacity-80"
+              type="button"
+            >
+              Sign up
+            </button>
+          </p>
           <div className="mt-8 flex justify-center">
-            <Button variant="outline" disabled={loading} onClick={() => void signIn("google")} className="!h-12 !min-h-12 !w-full !max-w-md !gap-3 !rounded-full !px-6 !text-base" style={{ height: 48, minHeight: 48, maxHeight: 48, fontSize: 16, lineHeight: "20px" }} type="button"><GoogleIcon />{loading ? "Signing in…" : "Login with Google"}</Button>
+            <Button
+              variant="outline"
+              disabled={loading}
+              onClick={() => void signIn("google")}
+              className="!h-12 !min-h-12 !w-full !max-w-md !gap-3 !rounded-full !px-6 !text-base"
+              style={{
+                height: 48,
+                minHeight: 48,
+                maxHeight: 48,
+                fontSize: 16,
+                lineHeight: "20px",
+              }}
+              type="button"
+            >
+              <GoogleIcon />
+              {loading ? "Signing in…" : "Login with Google"}
+            </Button>
           </div>
-          <div className="relative my-7"><div className="absolute inset-0 flex items-center"><Separator /></div><div className="relative flex justify-center"><span className="bg-background px-3 text-xs uppercase text-muted-foreground">or</span></div></div>
+          <div className="relative my-7">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-background px-3 text-xs uppercase text-muted-foreground">
+                or
+              </span>
+            </div>
+          </div>
           <form className="space-y-5" onSubmit={submit}>
-            <div className="space-y-2"><Label htmlFor="login-email">Email</Label><Input id="login-email" type="email" autoComplete="email" placeholder="ephraim@blocks.so" value={email} onChange={(event) => setEmail(event.target.value)} required /></div>
-            <div className="space-y-2"><Label htmlFor="login-password">Password</Label><Input id="login-password" type="password" autoComplete="current-password" placeholder="********" value={password} onChange={(event) => setPassword(event.target.value)} required /></div>
-            <Button disabled={loading} type="submit" className="mt-2 h-11 w-full font-medium">{loading ? "Signing in…" : "Sign in"}</Button>
-            {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+            <div className="space-y-2">
+              <Label htmlFor="login-email">Email</Label>
+              <Input
+                id="login-email"
+                type="email"
+                autoComplete="email"
+                placeholder="ephraim@blocks.so"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="login-password">Password</Label>
+              <Input
+                id="login-password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="********"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </div>
+            <Button
+              disabled={loading}
+              type="submit"
+              className="mt-2 h-11 w-full font-medium"
+            >
+              {loading ? "Signing in…" : "Sign in"}
+            </Button>
+            {error && (
+              <p className="text-sm text-red-600" role="alert">
+                {error}
+              </p>
+            )}
           </form>
-          <p className="mt-6 text-sm text-muted-foreground">Forgot your password? <button className="font-medium text-primary hover:opacity-80" type="button">Reset password</button></p>
+          <p className="mt-6 text-sm text-muted-foreground">
+            Forgot your password?{" "}
+            <button
+              className="font-medium text-primary hover:opacity-80"
+              type="button"
+            >
+              Reset password
+            </button>
+          </p>
         </div>
       </div>
     </main>

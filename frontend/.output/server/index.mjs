@@ -16,89 +16,124 @@ globalThis.__nitro_vite_envs__ = services;
 //#endregion
 //#region #nitro/virtual/public-assets-data
 var public_assets_data_default = {
-	"/robots.txt": {
-		"type": "text/plain; charset=utf-8",
-		"etag": "\"a0-CKGXSIe7TSsqDTmGm/nY1t/o5d0\"",
-		"mtime": "2026-09-22T16:50:10.130Z",
-		"size": 160,
-		"path": "../public/robots.txt"
-	},
 	"/favicon.ico": {
 		"type": "image/vnd.microsoft.icon",
 		"etag": "\"4f95-3RXc3p2mhEAs1WBwaIvE0Y0uu0Y\"",
-		"mtime": "2026-09-22T16:50:10.130Z",
+		"mtime": "2026-09-24T12:46:43.490Z",
 		"size": 20373,
 		"path": "../public/favicon.ico"
 	},
+	"/robots.txt": {
+		"type": "text/plain; charset=utf-8",
+		"etag": "\"a0-CKGXSIe7TSsqDTmGm/nY1t/o5d0\"",
+		"mtime": "2026-09-24T12:46:43.490Z",
+		"size": 160,
+		"path": "../public/robots.txt"
+	},
 	"/slash-pay.svg": {
 		"type": "image/svg+xml",
-		"etag": "\"10f-KS+Ujj+HEEn9e0B5eKUVPO17y1U\"",
-		"mtime": "2026-09-22T16:50:10.130Z",
+		"etag": "\"10f-KnTFUpgn0q5qycL/sFci1qMt5ho\"",
+		"mtime": "2026-09-24T12:46:43.490Z",
 		"size": 271,
 		"path": "../public/slash-pay.svg"
+	},
+	"/assets/dashboard-BTspGOBJ.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"1f48-PUv5t5fDIkCHiWXFdMpucpB+/XU\"",
+		"mtime": "2026-09-24T12:46:43.212Z",
+		"size": 8008,
+		"path": "../public/assets/dashboard-BTspGOBJ.js"
 	},
 	"/assets/get-paid-C2AcRzBW.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"2724d-cb8sJ/JKheQwsVte0ECr4Yco+JQ\"",
-		"mtime": "2026-09-22T16:50:09.790Z",
+		"mtime": "2026-09-24T12:46:43.212Z",
 		"size": 160333,
 		"path": "../public/assets/get-paid-C2AcRzBW.jpg"
 	},
-	"/assets/login-BQ3_VpnI.js": {
+	"/assets/google-logo-v2-CZqw6NSK.webp": {
+		"type": "image/webp",
+		"etag": "\"2f00-1w10IqJn6PTmXiBobZab9kBiubM\"",
+		"mtime": "2026-09-24T12:46:43.212Z",
+		"size": 12032,
+		"path": "../public/assets/google-logo-v2-CZqw6NSK.webp"
+	},
+	"/assets/login-BQ2BcKRJ.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"a6e-tJPUvg21lgs1AoGajg1NvKrhl3I\"",
-		"mtime": "2026-09-22T16:50:09.787Z",
-		"size": 2670,
-		"path": "../public/assets/login-BQ3_VpnI.js"
+		"etag": "\"1577-x/rZyE1HWXhVvSOOhgk85BVXELk\"",
+		"mtime": "2026-09-24T12:46:43.212Z",
+		"size": 5495,
+		"path": "../public/assets/login-BQ2BcKRJ.js"
 	},
 	"/assets/phone-travel-Y3B-rRqk.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"231c5-Krf1s/91gPWxuzLD9IrsGgXhGBQ\"",
-		"mtime": "2026-09-22T16:50:09.791Z",
+		"mtime": "2026-09-24T12:46:43.213Z",
 		"size": 143813,
 		"path": "../public/assets/phone-travel-Y3B-rRqk.jpg"
 	},
-	"/assets/styles-BoE-WOxs.css": {
-		"type": "text/css; charset=utf-8",
-		"etag": "\"15931-RvvY1iGhpH3gVgClPecRY7clADs\"",
-		"mtime": "2026-09-22T16:50:09.793Z",
-		"size": 88369,
-		"path": "../public/assets/styles-BoE-WOxs.css"
+	"/assets/index-D9efDRG6.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"65667-uizdSHcr1iEPTA+N/uh1n4V+Iy0\"",
+		"mtime": "2026-09-24T12:46:43.212Z",
+		"size": 415335,
+		"path": "../public/assets/index-D9efDRG6.js"
+	},
+	"/assets/users-BJ1lBGQQ.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"996-9zf7sCxqYK+5cU3GYas4L0SeV94\"",
+		"mtime": "2026-09-24T12:46:43.212Z",
+		"size": 2454,
+		"path": "../public/assets/users-BJ1lBGQQ.js"
+	},
+	"/assets/routes-DnHBlgQr.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"9c54-duEtRpZanFxfFbKZF1ISFVJCD8g\"",
+		"mtime": "2026-09-24T12:46:43.212Z",
+		"size": 40020,
+		"path": "../public/assets/routes-DnHBlgQr.js"
+	},
+	"/assets/slash-pay-brand-B1IYlrtv.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"3c7-3Y9vAxNHm9ESnTq9f7c6qpJ/mGE\"",
+		"mtime": "2026-09-24T12:46:43.212Z",
+		"size": 967,
+		"path": "../public/assets/slash-pay-brand-B1IYlrtv.js"
+	},
+	"/assets/paypal-logo-CCUi1x-V.png": {
+		"type": "image/png",
+		"etag": "\"1b33-poLkDFjQOlAq/duKO7POx5kG6cw\"",
+		"mtime": "2026-09-24T12:46:43.212Z",
+		"size": 6963,
+		"path": "../public/assets/paypal-logo-CCUi1x-V.png"
+	},
+	"/assets/skydo-logo-D38Ytztj.avif": {
+		"type": "image/avif",
+		"etag": "\"8764-uz9EcHbNOTMCZWXcYyc8BVNlZBk\"",
+		"mtime": "2026-09-24T12:46:43.213Z",
+		"size": 34660,
+		"path": "../public/assets/skydo-logo-D38Ytztj.avif"
 	},
 	"/assets/security-lock-BC3xdrKs.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"18dc6-bzt7bAV+tZhuWP6uxbfyxtOND3M\"",
-		"mtime": "2026-09-22T16:50:09.792Z",
+		"mtime": "2026-09-24T12:46:43.213Z",
 		"size": 101830,
 		"path": "../public/assets/security-lock-BC3xdrKs.jpg"
 	},
-	"/assets/globe-coins-BAPHEfkI.jpg": {
-		"type": "image/jpeg",
-		"etag": "\"30967-vqJPceF/3bLcmpQkFK6Nsxm2H/U\"",
-		"mtime": "2026-09-22T16:50:09.790Z",
-		"size": 199015,
-		"path": "../public/assets/globe-coins-BAPHEfkI.jpg"
+	"/assets/styles-mfGJYEod.css": {
+		"type": "text/css; charset=utf-8",
+		"etag": "\"16e6c-j61bWA1iYkXWI9NsMVoxnY7QG6Q\"",
+		"mtime": "2026-09-24T12:46:43.213Z",
+		"size": 93804,
+		"path": "../public/assets/styles-mfGJYEod.css"
 	},
-	"/assets/routes-hDMvrOhz.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"6751-oDTZShiOr3Ytj1GeQJ8DGpP3dVE\"",
-		"mtime": "2026-09-22T16:50:09.789Z",
-		"size": 26449,
-		"path": "../public/assets/routes-hDMvrOhz.js"
-	},
-	"/assets/slash-pay-brand-CvjSl4PG.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"904-ZOJnPFqZZ89JpIXBtBC404wvCXo\"",
-		"mtime": "2026-09-22T16:50:09.789Z",
-		"size": 2308,
-		"path": "../public/assets/slash-pay-brand-CvjSl4PG.js"
-	},
-	"/assets/index-Dg2TU_el.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"642f9-j32NulGyh4Yszkc1s4nbMtRSSrc\"",
-		"mtime": "2026-09-22T16:50:09.785Z",
-		"size": 410361,
-		"path": "../public/assets/index-Dg2TU_el.js"
+	"/assets/wise-logo-B1JmgelH.png": {
+		"type": "image/png",
+		"etag": "\"1bd3-RtbDm3AOUP2BuIaT75XrJNTmJFM\"",
+		"mtime": "2026-09-24T12:46:43.213Z",
+		"size": 7123,
+		"path": "../public/assets/wise-logo-B1JmgelH.png"
 	}
 };
 //#endregion
@@ -136,11 +171,11 @@ var findRouteRules = /* @__PURE__ */ (() => {
 		return r;
 	};
 })();
-var _lazy_05S0c1 = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
+var _lazy_dBumov = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
 var findRoute = /* @__PURE__ */ (() => {
 	const data = {
 		route: "/**",
-		handler: _lazy_05S0c1
+		handler: _lazy_dBumov
 	};
 	return ((_m, p) => {
 		return {

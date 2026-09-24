@@ -11,7 +11,12 @@ const transferInput = z.object({
 
 export const getDashboard = createServerFn({ method: "GET" }).handler(() => ({
   profile: { initials: "RD", name: "R N Dhanapraveenkrishna" },
-  currencies: { source: "INR", target: "USD", rates: currencyRates, updatedAt: "Just now" },
+  currencies: {
+    source: "INR",
+    target: "USD",
+    rates: currencyRates,
+    updatedAt: "Just now",
+  },
   reward: "Earn ₹9,000",
   transactions: [],
 }));
@@ -23,7 +28,13 @@ export const createTransfer = createServerFn({ method: "POST" })
     status: "Processing" as const,
     createdAt: new Date().toISOString(),
     ...data,
-    targetAmount: Number((data.amount * (currencyRates[data.target as keyof typeof currencyRates] / currencyRates[data.source as keyof typeof currencyRates])).toFixed(2)),
+    targetAmount: Number(
+      (
+        data.amount *
+        (currencyRates[data.target as keyof typeof currencyRates] /
+          currencyRates[data.source as keyof typeof currencyRates])
+      ).toFixed(2),
+    ),
     fee: Number((data.amount * 0.005).toFixed(2)),
     arrival: "By Thursday",
   }));

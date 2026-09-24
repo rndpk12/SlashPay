@@ -43,7 +43,7 @@ import paypalLogo from "@/assets/paypal-logo.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Slash Pay: The international account" },
+      { title: "Slash Pay — The financial OS for Indians earning globally" },
       {
         name: "description",
         content:
@@ -65,8 +65,8 @@ export const Route = createFileRoute("/")({
 const trustItems = [
   {
     icon: Users,
-    title: "Trusted by millions moving billions",
-    text: "We move €14 billion worldwide every month",
+    title: "Built for India’s global workforce",
+    text: "For freelancers, agencies, creators and businesses working across borders",
   },
   {
     icon: Landmark,
@@ -75,8 +75,8 @@ const trustItems = [
   },
   {
     icon: Headphones,
-    title: "24/7 customer support",
-    text: "Get help from thousands of specialists any time over email, phone and chat",
+    title: "One workspace for global income",
+    text: "Connect payments, currencies, invoices and transaction records",
   },
 ];
 
@@ -185,12 +185,19 @@ function WisePage() {
               <SlashPayBrand className="h-auto w-full" />
             </a>
           </div>
+          <div className="hidden items-center gap-6 text-sm font-medium lg:flex">
+            <a href="#platform">Product</a>
+            <a href="#business">Solutions</a>
+            <a href="#comparison">Why Slash Pay</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#pricing">Pricing</a>
+          </div>
           <div className="hidden items-center gap-4 text-sm font-medium md:flex">
             <Button variant="ghost" size="sm" asChild>
               <Link to="/login">Log in</Link>
             </Button>
-            <Button variant="outline" size="sm">
-              Sign up
+            <Button size="sm" asChild>
+              <Link to="/login">Get started</Link>
             </Button>
           </div>
           <Button
@@ -206,11 +213,14 @@ function WisePage() {
         </nav>
         {menuOpen && (
           <div className="page-shell grid gap-4 border-t border-border py-5 text-sm font-semibold md:hidden">
-            <a href="#personal">Personal</a>
-            <a href="#business">Business</a>
-            <a href="#platform">Platform</a>
-            <a href="#security">Help</a>
-            <Button className="w-fit">Sign up</Button>
+            <a href="#platform">Product</a>
+            <a href="#business">Solutions</a>
+            <a href="#comparison">Why Slash Pay</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#pricing">FAQ</a>
+            <Button className="w-fit" asChild>
+              <Link to="/login">Get started</Link>
+            </Button>
           </div>
         )}
       </header>
@@ -221,34 +231,95 @@ function WisePage() {
       >
         <div className="page-shell">
           <h1 className="display-shout motion-hero-title mx-auto max-w-[1120px] text-[52px] text-obsidian sm:text-[89px] lg:text-[105px]">
-            Money for here,
+            Global payments,
             <br />
-            there and everywhere
+            built for India
           </h1>
           <p className="motion-hero-copy mx-auto mt-8 max-w-xl text-lg text-charcoal">
-            160 countries and territories. 40 currencies. Get the account built
-            to save you money round the world.
+            Get paid by clients worldwide, manage currencies, create invoices,
+            track payments, and keep your international finances organized — all
+            from Slash Pay.
           </p>
           <div className="motion-hero-actions mt-7 flex flex-wrap items-center justify-center gap-7">
-            <Button onClick={() => scrollTo("personal")}>
-              Open an account
-            </Button>
+            <Button onClick={() => scrollTo("personal")}>Get started</Button>
             <button
               type="button"
               onClick={() => scrollTo("send")}
               className="text-link"
             >
-              Send money now
+              Explore Slash Pay
             </button>
           </div>
-          <div className="mx-auto mt-12 h-[340px] max-w-[780px] overflow-hidden sm:h-[460px]">
-            <img
-              src={globeImage}
-              width={1536}
-              height={1024}
-              alt="A turquoise globe surrounded by gold coins"
-              className="motion-globe mx-auto w-full object-cover object-top"
-            />
+          <div className="mx-auto mt-12 max-w-[900px] rounded-[24px] border border-border bg-white p-4 text-left shadow-[0_20px_70px_rgba(22,51,0,0.12)] sm:p-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-pebble">
+                  Slash Pay workspace
+                </p>
+                <p className="mt-1 text-lg font-bold text-obsidian">
+                  Good morning, Praveen
+                </p>
+              </div>
+              <span className="rounded-full bg-brand-mist px-3 py-1 text-xs font-semibold text-brand-ink">
+                Demo preview
+              </span>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl bg-brand-ink p-4 text-brand-lime">
+                <p className="text-xs text-paper">Total received</p>
+                <p className="mt-2 text-2xl font-bold">₹4,82,650</p>
+              </div>
+              <div className="rounded-2xl bg-surface p-4">
+                <p className="text-xs text-pebble">Available</p>
+                <p className="mt-2 text-2xl font-bold text-obsidian">
+                  ₹2,71,420
+                </p>
+              </div>
+              <div className="rounded-2xl bg-surface p-4">
+                <p className="text-xs text-pebble">Outstanding</p>
+                <p className="mt-2 text-2xl font-bold text-obsidian">
+                  ₹1,34,000
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <div>
+                <p className="text-sm font-semibold text-obsidian">Balances</p>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <span className="rounded-xl border border-border p-3">
+                    USD <strong className="block text-obsidian">$2,840</strong>
+                  </span>
+                  <span className="rounded-xl border border-border p-3">
+                    GBP <strong className="block text-obsidian">£740</strong>
+                  </span>
+                  <span className="rounded-xl border border-border p-3">
+                    EUR <strong className="block text-obsidian">€1,120</strong>
+                  </span>
+                  <span className="rounded-xl border border-border p-3">
+                    INR <strong className="block text-obsidian">₹84,320</strong>
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-obsidian">
+                  Recent payments
+                </p>
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="flex justify-between rounded-xl border border-border p-3">
+                    <span>Acme Inc</span>
+                    <strong className="text-brand-ink">+$2,500</strong>
+                  </div>
+                  <div className="flex justify-between rounded-xl border border-border p-3">
+                    <span>Nova AI</span>
+                    <strong className="text-brand-ink">+€1,200</strong>
+                  </div>
+                  <div className="flex justify-between rounded-xl border border-border p-3">
+                    <span>Vertex Labs</span>
+                    <strong className="text-pebble">$800 pending</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -271,16 +342,62 @@ function WisePage() {
         </div>
       </section>
 
+      <section id="problem" className="bg-background py-20">
+        <div className="page-shell grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-ink">
+              The problem
+            </p>
+            <h2 className="mt-4 text-[45px] font-bold leading-[1.1] text-obsidian sm:text-[61px]">
+              Getting paid globally shouldn’t require five different tools.
+            </h2>
+            <p className="mt-6 max-w-md text-lg text-slate">
+              For Indians working with international clients, payment is only
+              one part of the job. Invoices, currencies, tracking and records
+              often live in separate places.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              "Client payments",
+              "Invoices",
+              "Currency conversion",
+              "Spreadsheets",
+              "Documents",
+              "Accounting records",
+            ].map((item, index) => (
+              <div
+                key={item}
+                className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-5"
+              >
+                <span className="grid size-9 place-items-center rounded-full bg-brand-mist text-sm font-bold text-brand-ink">
+                  {index + 1}
+                </span>
+                <span className="font-semibold text-obsidian">{item}</span>
+              </div>
+            ))}
+            <div className="sm:col-span-2 rounded-2xl bg-brand-ink p-6 text-brand-lime">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em]">
+                Slash Pay direction
+              </p>
+              <p className="mt-2 text-xl font-bold">
+                Connect the payment, invoice, currency and record in one
+                workspace.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="send" className="bg-primary py-16 sm:py-20">
         <div className="page-shell grid items-center gap-12 lg:grid-cols-[1fr_440px]">
           <div data-reveal="left">
             <h2 className="text-[45px] font-bold leading-[1.1] text-obsidian sm:text-[61px]">
-              Send money globally for less
+              Get paid globally. Keep every payment connected.
             </h2>
             <p className="mt-6 max-w-md text-lg">
-              <span className="text-link">Save up to 8x</span> on international
-              transfers —<br />
-              <span className="text-link">with fees as low as 0.1%.</span>
+              <span className="text-link">Manage your global income</span> with
+              clear rates, visible fees and connected records.
             </p>
             <Button
               variant="forest"
@@ -331,12 +448,11 @@ function WisePage() {
             <BriefcaseBusiness />
           </div>
           <h2 className="display-shout mt-7 text-[45px] sm:text-[61px]">
-            Built for business too
+            The financial OS for Indians earning globally
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base font-medium leading-6 text-paper">
-            Go global with our international business account. Make payments and
-            get paid in 40+ currencies. Join over 700,000 businesses thriving
-            with Slash Pay.
+            Slash Pay is being built for freelancers, agencies, creators and
+            small businesses managing international work.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-8">
             <Button>Try demo</Button>
@@ -352,11 +468,11 @@ function WisePage() {
           <div className="grid items-center gap-10 md:grid-cols-2">
             <div data-reveal="left">
               <h2 className="text-[45px] font-bold leading-[1.1] text-obsidian sm:text-[61px]">
-                Disappoint thieves
+                Financial software should be built carefully.
               </h2>
               <p className="mt-6 max-w-md text-lg text-slate">
-                Every month, millions of our personal and business customers
-                trust us to move over €14 billion of their money.
+                A focused workspace for international payments, transparent FX,
+                invoices and connected financial records.
               </p>
               <Button className="mt-8">How we keep your money safe</Button>
             </div>
@@ -405,6 +521,151 @@ function WisePage() {
         </div>
       </section>
 
+      <section id="how-it-works" className="bg-surface py-20">
+        <div className="page-shell">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-ink">
+              One workspace for global income
+            </p>
+            <h2 className="mt-4 text-[45px] font-bold leading-[1.1] text-obsidian sm:text-[61px]">
+              From client payment to financial record.
+            </h2>
+            <p className="mt-6 text-lg text-slate">
+              Slash Pay is being built to connect the workflow behind
+              international work, without forcing your payments, invoices and
+              records into separate tools.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <article className="rounded-[24px] border border-border bg-background p-7">
+              <p className="text-sm font-semibold text-brand-ink">
+                01 · GET PAID
+              </p>
+              <h3 className="mt-4 text-2xl font-bold text-obsidian">
+                Bring client payments together.
+              </h3>
+              <p className="mt-3 text-slate">
+                Payment requests, client context and status tracking in one
+                place.
+              </p>
+            </article>
+            <article className="rounded-[24px] border border-border bg-background p-7">
+              <p className="text-sm font-semibold text-brand-ink">
+                02 · MANAGE MONEY
+              </p>
+              <h3 className="mt-4 text-2xl font-bold text-obsidian">
+                See the value before you convert.
+              </h3>
+              <p className="mt-3 text-slate">
+                Clear rates, visible fees, balances and transfer history.
+              </p>
+            </article>
+            <article className="rounded-[24px] border border-border bg-background p-7">
+              <p className="text-sm font-semibold text-brand-ink">
+                03 · RUN YOUR BUSINESS
+              </p>
+              <h3 className="mt-4 text-2xl font-bold text-obsidian">
+                Keep every payment connected.
+              </h3>
+              <p className="mt-3 text-slate">
+                Invoices, clients, settlements and reports designed to work
+                together.
+              </p>
+            </article>
+          </div>
+          <div className="mt-16 grid gap-4 border-t border-border pt-8 sm:grid-cols-4">
+            <div>
+              <span className="text-3xl font-bold text-brand-ink">01</span>
+              <p className="mt-3 font-semibold text-obsidian">
+                Create your client
+              </p>
+            </div>
+            <div>
+              <span className="text-3xl font-bold text-brand-ink">02</span>
+              <p className="mt-3 font-semibold text-obsidian">
+                Send an invoice or payment request
+              </p>
+            </div>
+            <div>
+              <span className="text-3xl font-bold text-brand-ink">03</span>
+              <p className="mt-3 font-semibold text-obsidian">
+                Track payment and conversion
+              </p>
+            </div>
+            <div>
+              <span className="text-3xl font-bold text-brand-ink">04</span>
+              <p className="mt-3 font-semibold text-obsidian">
+                Keep the records together
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="bg-background py-20">
+        <div className="page-shell grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-ink">
+              Questions, answered
+            </p>
+            <h2 className="mt-4 text-[45px] font-bold leading-[1.1] text-obsidian sm:text-[61px]">
+              Built for the way global work actually happens.
+            </h2>
+          </div>
+          <div className="divide-y divide-border border-y border-border">
+            {[
+              [
+                "What is Slash Pay?",
+                "Slash Pay is being built as a financial workspace for Indians earning across borders, connecting payments, currencies, invoices and transaction records.",
+              ],
+              [
+                "Who is it for?",
+                "Freelancers, developers, designers, consultants, creators, agencies, remote professionals and small businesses working with international clients.",
+              ],
+              [
+                "Is Slash Pay a bank?",
+                "No. Slash Pay is a software product in development. Availability of payment services depends on supported partners, jurisdictions and applicable requirements.",
+              ],
+              [
+                "Does it replace my accountant?",
+                "No. It is designed to keep the context behind your income organized and make exports and reconciliation easier.",
+              ],
+              [
+                "Which currencies will it support?",
+                "The product direction includes multi-currency balances and transparent conversion. Actual availability will depend on supported services and partners.",
+              ],
+            ].map(([question, answer]) => (
+              <details key={question} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-semibold text-obsidian">
+                  <span>{question}</span>
+                  <ChevronDown
+                    className="transition-transform group-open:rotate-180"
+                    size={20}
+                  />
+                </summary>
+                <p className="mt-3 max-w-xl leading-6 text-slate">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="bg-brand-ink py-20 text-center text-brand-lime">
+        <div className="page-shell">
+          <h2 className="display-shout text-[45px] sm:text-[72px]">
+            Your work is global.
+            <br />
+            Your finances should be too.
+          </h2>
+          <p className="mx-auto mt-6 max-w-xl text-lg text-paper">
+            Bring international payments, invoices, currencies and financial
+            records into one workspace.
+          </p>
+          <Button className="mt-8" asChild>
+            <Link to="/login">Get started with Slash Pay</Link>
+          </Button>
+        </div>
+      </section>
+
       <footer className="border-t border-border bg-surface py-16">
         <div className="page-shell">
           <div className="flex items-center justify-between">
@@ -417,21 +678,48 @@ function WisePage() {
               <span className="font-black">in</span>
             </div>
           </div>
-          <div className="mt-16 grid gap-5 text-base md:grid-cols-3">
-            <div className="space-y-5">
-              <p>Legal</p>
-              <p>Research privacy policy</p>
-              <p>Modern slavery statement</p>
+          <div className="mt-16 grid gap-8 text-base sm:grid-cols-2 md:grid-cols-4">
+            <div className="space-y-4">
+              <p className="font-semibold text-obsidian">Product</p>
+              <a href="#send" className="block">
+                Payments
+              </a>
+              <a href="#comparison" className="block">
+                FX comparison
+              </a>
+              <a href="#platform" className="block">
+                Invoices
+              </a>
+              <a href="#send" className="block">
+                Transactions
+              </a>
             </div>
-            <div className="space-y-5">
-              <p>Privacy policy</p>
-              <p>Complaints</p>
-              <p>Accessibility</p>
+            <div className="space-y-4">
+              <p className="font-semibold text-obsidian">Company</p>
+              <a href="#top" className="block">
+                About
+              </a>
+              <a href="#top" className="block">
+                Contact
+              </a>
             </div>
-            <div className="space-y-5">
-              <p>Cookie policy</p>
-              <p>Country site map</p>
-              <p>Intellectual property</p>
+            <div className="space-y-4">
+              <p className="font-semibold text-obsidian">Resources</p>
+              <a href="#how-it-works" className="block">
+                How it works
+              </a>
+              <a href="#security" className="block">
+                Engineering
+              </a>
+              <a href="#pricing" className="block">
+                FAQ
+              </a>
+            </div>
+            <div className="space-y-4">
+              <p className="font-semibold text-obsidian">Legal</p>
+              <span>Privacy</span>
+              <span>Terms</span>
+              <span>© 2026 Slash Pay</span>
             </div>
           </div>
           <div className="mt-16 space-y-6 text-sm leading-6 text-charcoal">
@@ -828,7 +1116,9 @@ function ComparisonTable({
     <div className="mt-8 overflow-x-auto rounded-[10px] bg-card p-4 text-left text-card-foreground shadow-[var(--shadow-elevated)] sm:p-6">
       <div className="grid min-w-[820px] grid-cols-3 gap-8">
         <div className="flex items-center gap-3">
-          <span className="whitespace-nowrap text-lg font-bold text-obsidian">Send</span>
+          <span className="whitespace-nowrap text-lg font-bold text-obsidian">
+            Send
+          </span>
           <CurrencyControl
             label="Send currency"
             value={sourceCode}
@@ -836,7 +1126,9 @@ function ComparisonTable({
           />
         </div>
         <div className="flex items-center gap-3">
-          <span className="whitespace-nowrap text-lg font-bold text-obsidian">Receive</span>
+          <span className="whitespace-nowrap text-lg font-bold text-obsidian">
+            Receive
+          </span>
           <CurrencyControl
             label="Receive currency"
             value={destinationCode}
@@ -880,7 +1172,9 @@ function ComparisonTable({
                 {provider.name}
               </div>
               <strong
-                className={provider.highlighted ? "text-brand-ink" : "text-brand-red"}
+                className={
+                  provider.highlighted ? "text-brand-ink" : "text-brand-red"
+                }
               >
                 {formatMoney(comparison.recipientGets, destination.code)}
               </strong>

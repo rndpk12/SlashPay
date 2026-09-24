@@ -1,4 +1,4 @@
-import { A as createLRUCache, M as decodePath, O as rootRouteId, S as getStylesheetHref, _ as GLOBAL_TSR, b as createInlineCssStyleAsset, j as invariant, v as TSR_SCRIPT_BARRIER_ID, y as createInlineCssPlaceholderAsset } from "./react-router+[...].mjs";
+import { A as rootRouteId, C as getStylesheetHref, M as createLRUCache, N as invariant, P as decodePath, b as createInlineCssPlaceholderAsset, v as GLOBAL_TSR, x as createInlineCssStyleAsset, y as TSR_SCRIPT_BARRIER_ID } from "./react-router+[...].mjs";
 import { Buffer } from "node:buffer";
 //#region node_modules/unenv/dist/runtime/polyfill/globalthis.mjs
 var globalthis_default = globalThis;
@@ -3122,6 +3122,66 @@ var defaultSerovalPlugins = [
 	})
 ];
 //#endregion
+//#region node_modules/cookie-es/dist/index.mjs
+function splitSetCookieString(cookiesString) {
+	if (Array.isArray(cookiesString)) return cookiesString.flatMap((c) => splitSetCookieString(c));
+	if (typeof cookiesString !== "string") return [];
+	const cookiesStrings = [];
+	let pos = 0;
+	let start;
+	let ch;
+	let lastComma;
+	let nextStart;
+	let cookiesSeparatorFound;
+	const skipWhitespace = () => {
+		while (pos < cookiesString.length && /\s/.test(cookiesString.charAt(pos))) pos += 1;
+		return pos < cookiesString.length;
+	};
+	const notSpecialChar = () => {
+		ch = cookiesString.charAt(pos);
+		return ch !== "=" && ch !== ";" && ch !== ",";
+	};
+	while (pos < cookiesString.length) {
+		start = pos;
+		cookiesSeparatorFound = false;
+		while (skipWhitespace()) {
+			ch = cookiesString.charAt(pos);
+			if (ch === ",") {
+				lastComma = pos;
+				pos += 1;
+				skipWhitespace();
+				nextStart = pos;
+				while (pos < cookiesString.length && notSpecialChar()) pos += 1;
+				if (pos < cookiesString.length && cookiesString.charAt(pos) === "=") {
+					cookiesSeparatorFound = true;
+					pos = nextStart;
+					cookiesStrings.push(cookiesString.slice(start, lastComma));
+					start = pos;
+				} else pos = lastComma + 1;
+			} else pos += 1;
+		}
+		if (!cookiesSeparatorFound || pos >= cookiesString.length) cookiesStrings.push(cookiesString.slice(start));
+	}
+	return cookiesStrings;
+}
+//#endregion
+//#region node_modules/@tanstack/router-core/dist/esm/ssr/headers.js
+function toHeadersInstance(init) {
+	if (init instanceof Headers) return init;
+	else if (Array.isArray(init)) return new Headers(init);
+	else if (typeof init === "object") return new Headers(init);
+	else return null;
+}
+function mergeHeaders(...headers) {
+	return headers.reduce((acc, header) => {
+		const headersInstance = toHeadersInstance(header);
+		if (!headersInstance) return acc;
+		for (const [key, value] of headersInstance.entries()) if (key === "set-cookie") splitSetCookieString(value).forEach((cookie) => acc.append("set-cookie", cookie));
+		else acc.set(key, value);
+		return acc;
+	}, new Headers());
+}
+//#endregion
 //#region node_modules/@tanstack/router-core/dist/esm/ssr/ssr-match-id.js
 function dehydrateSsrMatchId(id) {
 	return id.replaceAll("/", "\0");
@@ -3609,64 +3669,4 @@ function getNormalizedURL(url, base) {
 	};
 }
 //#endregion
-//#region node_modules/cookie-es/dist/index.mjs
-function splitSetCookieString(cookiesString) {
-	if (Array.isArray(cookiesString)) return cookiesString.flatMap((c) => splitSetCookieString(c));
-	if (typeof cookiesString !== "string") return [];
-	const cookiesStrings = [];
-	let pos = 0;
-	let start;
-	let ch;
-	let lastComma;
-	let nextStart;
-	let cookiesSeparatorFound;
-	const skipWhitespace = () => {
-		while (pos < cookiesString.length && /\s/.test(cookiesString.charAt(pos))) pos += 1;
-		return pos < cookiesString.length;
-	};
-	const notSpecialChar = () => {
-		ch = cookiesString.charAt(pos);
-		return ch !== "=" && ch !== ";" && ch !== ",";
-	};
-	while (pos < cookiesString.length) {
-		start = pos;
-		cookiesSeparatorFound = false;
-		while (skipWhitespace()) {
-			ch = cookiesString.charAt(pos);
-			if (ch === ",") {
-				lastComma = pos;
-				pos += 1;
-				skipWhitespace();
-				nextStart = pos;
-				while (pos < cookiesString.length && notSpecialChar()) pos += 1;
-				if (pos < cookiesString.length && cookiesString.charAt(pos) === "=") {
-					cookiesSeparatorFound = true;
-					pos = nextStart;
-					cookiesStrings.push(cookiesString.slice(start, lastComma));
-					start = pos;
-				} else pos = lastComma + 1;
-			} else pos += 1;
-		}
-		if (!cookiesSeparatorFound || pos >= cookiesString.length) cookiesStrings.push(cookiesString.slice(start));
-	}
-	return cookiesStrings;
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/ssr/headers.js
-function toHeadersInstance(init) {
-	if (init instanceof Headers) return init;
-	else if (Array.isArray(init)) return new Headers(init);
-	else if (typeof init === "object") return new Headers(init);
-	else return null;
-}
-function mergeHeaders(...headers) {
-	return headers.reduce((acc, header) => {
-		const headersInstance = toHeadersInstance(header);
-		if (!headersInstance) return acc;
-		for (const [key, value] of headersInstance.entries()) if (key === "set-cookie") splitSetCookieString(value).forEach((cookie) => acc.append("set-cookie", cookie));
-		else acc.set(key, value);
-		return acc;
-	}, new Headers());
-}
-//#endregion
-export { defaultSerovalPlugins as a, makeSerovalPlugin as c, toCrossJSONStream as d, getOrigin as i, fromJSON as l, attachRouterServerSsrUtils as n, createRawStreamRPCPlugin as o, getNormalizedURL as r, createSerializationAdapter as s, mergeHeaders as t, toCrossJSONAsync as u };
+export { defaultSerovalPlugins as a, makeSerovalPlugin as c, toCrossJSONStream as d, mergeHeaders as i, fromJSON as l, getNormalizedURL as n, createRawStreamRPCPlugin as o, getOrigin as r, createSerializationAdapter as s, attachRouterServerSsrUtils as t, toCrossJSONAsync as u };
