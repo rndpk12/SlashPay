@@ -13,6 +13,8 @@ import java.util.UUID;
 @Service
 public class TransactionService {
 
+    public static final String INTERNAL_LEDGER_PROVIDER = "INTERNAL_LEDGER";
+
     private final TransactionRepository transactionRepository;
 
     public TransactionService(
@@ -125,6 +127,7 @@ public class TransactionService {
         transaction.setTransactionType("TRANSFER");
 
         transaction.setStatus("PENDING");
+        transaction.setProvider(INTERNAL_LEDGER_PROVIDER);
 
         /*
          * Legacy transaction fields.
@@ -225,6 +228,7 @@ public class TransactionService {
         transaction.setTransactionType("DEPOSIT");
 
         transaction.setStatus("PENDING");
+        transaction.setProvider(INTERNAL_LEDGER_PROVIDER);
 
         /*
          * Legacy transaction fields.
@@ -297,6 +301,7 @@ public class TransactionService {
         transaction.setInitiatedByUserId(userId);
         transaction.setTransactionType("WITHDRAWAL");
         transaction.setStatus("PENDING");
+        transaction.setProvider(INTERNAL_LEDGER_PROVIDER);
         transaction.setCurrency(normalizedCurrency);
         transaction.setAmount(amount);
         transaction.setSourceCurrency(null);

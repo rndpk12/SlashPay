@@ -58,6 +58,20 @@ public class Transaction {
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
+    /**
+     * The execution rail used for this transaction. INTERNAL_LEDGER is the
+     * first Slash Pay rail; external rails can be added without changing the
+     * transaction lifecycle.
+     */
+    @Column(nullable = false, length = 30)
+    private String provider;
+
+    @Column(name = "provider_transfer_id", length = 120)
+    private String providerTransferId;
+
+    @Column(name = "failure_reason", length = 255)
+    private String failureReason;
+
     public Transaction() {
     }
 
@@ -125,6 +139,18 @@ public class Transaction {
         return completedAt;
     }
 
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getProviderTransferId() {
+        return providerTransferId;
+    }
+
+    public String getFailureReason() {
+        return failureReason;
+    }
+
     public void setId(UUID id) {
         this.id = id;
     }
@@ -187,5 +213,17 @@ public class Transaction {
 
     public void setCompletedAt(OffsetDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public void setProviderTransferId(String providerTransferId) {
+        this.providerTransferId = providerTransferId;
+    }
+
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
     }
 }

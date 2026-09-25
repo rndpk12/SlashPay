@@ -67,3 +67,29 @@ export function SlashPayBrand({
     </svg>
   );
 }
+
+export function SlashPayMark({
+  title = "Slash Pay",
+  ...props
+}: SVGProps<SVGSVGElement> & { title?: string }) {
+  return (
+    <svg
+      viewBox="0 0 110 110"
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label={title}
+      {...props}
+    >
+      <rect width="110" height="110" fill="#0A0A0A" />
+      <polygon points="29,99 55,99 88,11 62,11" fill="#FDFCFA" />
+      <rect
+        x="72"
+        y="7"
+        width="18"
+        height="18"
+        transform="rotate(-8 81 16)"
+        fill="#9FE870"
+      />
+    </svg>
+  );
+}
