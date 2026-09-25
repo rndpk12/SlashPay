@@ -15,9 +15,10 @@ import {
   Upload,
   Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SlashPayBrand } from "@/components/slash-pay-brand";
 import { createTransfer, getDashboard } from "@/services/dashboard-service";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/dashboard")({
   loader: () => getDashboard(),
@@ -43,6 +44,12 @@ function DashboardPage() {
     Array<{ id: string; amount: number; targetAmount: number; status: string }>
   >(data.transactions);
   const [sending, setSending] = useState(false);
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) window.location.href = "/login";
+    });
+  }, []);
   const [includeFees, setIncludeFees] = useState(true);
   const value = Number(amount.replace(/,/g, "")) || 0;
   const rate =

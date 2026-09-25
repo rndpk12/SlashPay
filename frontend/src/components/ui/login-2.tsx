@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SlashPayBrand } from "@/components/slash-pay-brand";
 import googleLogo from "@/assets/google-logo-v2.webp";
+import { supabase } from "@/lib/supabase";
 
 const GoogleIcon = () => (
   <span
@@ -29,16 +30,30 @@ export default function Login2() {
   async function signIn(provider: "password" | "google") {
     setError("");
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 450));
-    if (provider === "password" && (!email.trim() || password.length < 6)) {
+    if (!supabase) {
       setError(
-        "Enter a valid email and a password with at least 6 characters.",
+        "Authentication is not configured yet. Add the Supabase environment variables.",
       );
       setLoading(false);
       return;
     }
-    sessionStorage.setItem("slashpay-auth", "signed-in");
-    navigate({ to: "/dashboard" });
+    const result =
+      provider === "google"
+        ? await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: `${window.location.origin}/dashboard` },
+          })
+        : await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
+    if (result.error) {
+      setError(result.error.message);
+      setLoading(false);
+      return;
+    }
+    if (provider === "password") navigate({ to: "/dashboard" });
+    setLoading(false);
   }
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,12 +75,12 @@ export default function Login2() {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <button
+            <Link
+              to="/signup"
               className="font-medium text-primary hover:opacity-80"
-              type="button"
             >
               Sign up
-            </button>
+            </Link>
           </p>
           <div className="mt-8 flex justify-center">
             <Button

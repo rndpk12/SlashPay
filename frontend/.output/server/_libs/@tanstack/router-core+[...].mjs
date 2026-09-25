@@ -1,8 +1,6 @@
 import { A as rootRouteId, C as getStylesheetHref, M as createLRUCache, N as invariant, P as decodePath, b as createInlineCssPlaceholderAsset, v as GLOBAL_TSR, x as createInlineCssStyleAsset, y as TSR_SCRIPT_BARRIER_ID } from "./react-router+[...].mjs";
+import { n as globalthis_default } from "../supabase__realtime-js+unenv.mjs";
 import { Buffer } from "node:buffer";
-//#region node_modules/unenv/dist/runtime/polyfill/globalthis.mjs
-var globalthis_default = globalThis;
-//#endregion
 //#region node_modules/seroval/dist/index.js
 var SYM_ASYNC_ITERATOR = Symbol.asyncIterator;
 var SYM_HAS_INSTANCE = Symbol.hasInstance;
