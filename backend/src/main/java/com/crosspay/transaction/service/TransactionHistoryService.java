@@ -68,7 +68,9 @@ public class TransactionHistoryService {
         );
         OffsetDateTime fromDate = from == null ? null : from.atStartOfDay().atOffset(ZoneOffset.UTC);
         OffsetDateTime toDate = to == null ? null : to.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
-        Page<Transaction> transactions = transactionRepository.findFilteredHistory(userId, status, fromDate, toDate, pageable);
+        Page<Transaction> transactions = status == null && fromDate == null && toDate == null
+                ? transactionRepository.findTransactionHistoryByUserId(userId, pageable)
+                : transactionRepository.findFilteredHistory(userId, status, fromDate, toDate, pageable);
 
         return new TransactionHistoryResponse(
                 transactions.getContent().stream()
