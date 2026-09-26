@@ -13,6 +13,8 @@ export type BackendTransaction = {
   sourceAmount: number | null;
   destinationAmount: number | null;
   fxQuoteId: string | null;
+  exchangeRate: number | null;
+  feeAmount: number | null;
   amount: number | null;
   currency: string | null;
   createdAt: string | null;
@@ -37,6 +39,15 @@ export type BackendWallet = {
   status: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type BackendOperationReceipt = {
+  transactionId: string;
+  currency: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  completedAt: string | null;
 };
 
 export function isBackendConfigured() {
@@ -101,8 +112,12 @@ export function registerWithBackend(input: {
   });
 }
 
-export async function getBackendTransactions() {
-  return request<TransactionHistoryResponse>("/api/v1/transactions?page=0&size=20");
+export async function getBackendTransactions(options: { page?: number; size?: number; status?: string; from?: string; to?: string } = {}) {
+  const params = new URLSearchParams({ page: String(options.page ?? 0), size: String(options.size ?? 100) });
+  if (options.status && options.status !== "all") params.set("status", options.status);
+  if (options.from) params.set("from", options.from);
+  if (options.to) params.set("to", options.to);
+  return request<TransactionHistoryResponse>(`/api/v1/transactions?${params.toString()}`);
 }
 
 export function getBackendRecipients() {
@@ -179,7 +194,7 @@ export function createBackendBalanceOperation(
   amount: number,
   currency: string,
 ) {
-  return request(`/api/v1/${type === "deposit" ? "deposits" : "withdrawals"}`, {
+  return request<BackendOperationReceipt>(`/api/v1/${type === "deposit" ? "deposits" : "withdrawals"}`, {
     method: "POST",
     headers: { "Idempotency-Key": crypto.randomUUID() },
     body: JSON.stringify({ amount, currency }),

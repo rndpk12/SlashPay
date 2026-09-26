@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.OffsetDateTime;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
 
@@ -22,6 +23,21 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             """)
     Page<Transaction> findTransactionHistoryByUserId(
             @Param("userId") UUID userId,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT t FROM Transaction t
+            WHERE (t.initiatedByUserId = :userId OR t.senderUserId = :userId OR t.recipientUserId = :userId)
+              AND (:status IS NULL OR LOWER(t.status) = LOWER(:status))
+              AND (:fromDate IS NULL OR t.createdAt >= :fromDate)
+              AND (:toDate IS NULL OR t.createdAt < :toDate)
+            """)
+    Page<Transaction> findFilteredHistory(
+            @Param("userId") UUID userId,
+            @Param("status") String status,
+            @Param("fromDate") OffsetDateTime fromDate,
+            @Param("toDate") OffsetDateTime toDate,
             Pageable pageable
     );
 

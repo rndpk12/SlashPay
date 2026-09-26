@@ -43,6 +43,7 @@ import {
   getBackendWallets,
   type BackendRecipient,
   type BackendQuote,
+  type BackendOperationReceipt,
   type BackendWallet,
   type BackendTransaction,
 } from "@/lib/backend-api";
@@ -81,6 +82,8 @@ type DashboardTransfer = {
   sourceCurrency?: string;
   targetCurrency?: string;
   quoteId?: string;
+  exchangeRate?: number;
+  feeAmount?: number;
 };
 
 function DashboardPage() {
@@ -287,6 +290,8 @@ function DashboardPage() {
             sourceCurrency: transfer.sourceCurrency,
             targetCurrency: transfer.destinationCurrency,
             quoteId: lockedQuote.id,
+            exchangeRate: Number(lockedQuote.exchangeRate),
+            feeAmount: Number(lockedQuote.feeAmount),
           },
           ...current,
         ]);
@@ -456,6 +461,9 @@ function DashboardPage() {
                   <p><span className="text-[#747674]">FX rate</span><br /><strong>1 {selectedQuote.fromCurrency} = {Number(selectedQuote.exchangeRate).toFixed(4)} {selectedQuote.toCurrency}</strong></p>
                   <p><span className="text-[#747674]">Fee</span><br /><strong>{Number(selectedQuote.feeAmount).toFixed(2)} {selectedQuote.fromCurrency}</strong></p>
                 </div>
+              )}
+              {!selectedQuote && selectedTransfer.exchangeRate && (
+                <div className="grid grid-cols-2 gap-4 border-t border-[#e1e4df] pt-3"><p><span className="text-[#747674]">FX rate</span><br /><strong>1 {selectedTransfer.sourceCurrency} = {selectedTransfer.exchangeRate.toFixed(4)} {selectedTransfer.targetCurrency}</strong></p><p><span className="text-[#747674]">Fee</span><br /><strong>{(selectedTransfer.feeAmount ?? 0).toFixed(2)} {selectedTransfer.sourceCurrency}</strong></p></div>
               )}
               <p><span className="text-[#747674]">Transfer ID</span><br /><strong className="break-all font-mono text-xs">{selectedTransfer.id}</strong></p>
             </div>
@@ -1125,6 +1133,7 @@ function SettingsSection({ profile }: SettingsSectionProps) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [receipt, setReceipt] = useState<BackendOperationReceipt | null>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -1702,6 +1711,8 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
   const [error, setError] = useState<string | null>(null);
   const [activities, setActivities] = useState<BalanceActivity[]>([]);
   const [activityCurrency, setActivityCurrency] = useState("all");
+  const [ledgerPage, setLedgerPage] = useState(0);
+  const ledgerPageSize = 10;
   const currencies = ["USD", "EUR", "GBP", "INR"];
 
   useEffect(() => {
@@ -1853,11 +1864,12 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
       setSaving(true);
       setError(null);
       try {
-        await createBackendBalanceOperation(
+        const operationReceipt = await createBackendBalanceOperation(
           direction === "deposit" ? "deposit" : "withdrawal",
           value,
           actionCurrency,
         );
+        setReceipt(operationReceipt);
         const [walletRows, history] = await Promise.all([
           getBackendWallets(),
           getBackendTransactions(),
@@ -1934,6 +1946,18 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
   );
   const totalPending = balances.reduce((sum, item) => sum + item.pending, 0);
   const visibleActivities = activities.filter((activity) => activityCurrency === "all" || activity.currency === activityCurrency);
+  const pagedActivities = visibleActivities.slice(ledgerPage * ledgerPageSize, (ledgerPage + 1) * ledgerPageSize);
+  function exportLedger() {
+    const header = "id,type,currency,amount,status,created_at";
+    const rows = visibleActivities.map((activity) => [activity.id, activity.kind, activity.currency, activity.amount.toFixed(2), activity.status ?? "", activity.createdAt].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","));
+    const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "slash-pay-ledger.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="mt-6">
@@ -1987,6 +2011,12 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
         <p className="mt-4 rounded-xl bg-[#fff1ef] px-4 py-3 text-sm text-[#b44336]">
           {error}
         </p>
+      )}
+      {receipt && (
+        <div className="mt-4 rounded-xl border border-[#b9dca5] bg-[#f3fbeE] px-4 py-3 text-sm text-[#31551d]">
+          <div className="flex items-center justify-between gap-3"><strong>{receipt.status === "COMPLETED" ? "Operation completed" : "Operation receipt"}</strong><button type="button" onClick={() => setReceipt(null)} className="text-xs underline">Dismiss</button></div>
+          <p className="mt-1 text-xs">{receipt.transactionId} · {receipt.amount.toFixed(2)} {receipt.currency} · {new Date(receipt.createdAt).toLocaleString()}</p>
+        </div>
       )}
       <div className="mt-7 grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
         <div className="rounded-[24px] border border-[#e1e4df] bg-white p-5">
@@ -2077,9 +2107,7 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
               Deposits, withdrawals, and transfers for this account.
             </p>
           </div>
-          <span className="text-xs text-[#747674]">
-            {visibleActivities.length} items
-          </span>
+          <div className="flex items-center gap-2"><span className="text-xs text-[#747674]">{visibleActivities.length} items</span><button type="button" onClick={exportLedger} className="rounded-full border border-[#cfd3cc] px-3 py-1.5 text-xs font-semibold">Export CSV</button></div>
         </div>
         <select value={activityCurrency} onChange={(event) => setActivityCurrency(event.target.value)} className="mt-4 rounded-xl border border-[#dfe2dd] bg-white px-3 py-2 text-xs outline-none">
           <option value="all">All currencies</option>
@@ -2091,7 +2119,7 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
           </p>
         ) : (
           <div className="mt-4 divide-y divide-[#eef0ed]">
-            {visibleActivities.slice(0, 12).map((activity) => (
+            {pagedActivities.map((activity) => (
               <div
                 key={activity.id}
                 className="flex flex-wrap items-center justify-between gap-3 py-3"
@@ -2120,6 +2148,13 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
                 </p>
               </div>
             ))}
+          </div>
+        )}
+        {visibleActivities.length > ledgerPageSize && (
+          <div className="mt-4 flex items-center justify-between border-t border-[#eef0ed] pt-3 text-xs">
+            <button type="button" disabled={ledgerPage === 0} onClick={() => setLedgerPage((page) => Math.max(0, page - 1))} className="rounded-full border border-[#cfd3cc] px-3 py-1.5 disabled:opacity-40">Previous</button>
+            <span className="text-[#747674]">Page {ledgerPage + 1} of {Math.ceil(visibleActivities.length / ledgerPageSize)}</span>
+            <button type="button" disabled={(ledgerPage + 1) * ledgerPageSize >= visibleActivities.length} onClick={() => setLedgerPage((page) => page + 1)} className="rounded-full border border-[#cfd3cc] px-3 py-1.5 disabled:opacity-40">Next</button>
           </div>
         )}
       </div>
@@ -3235,6 +3270,8 @@ function mapBackendTransaction(transaction: BackendTransaction): DashboardTransf
     sourceCurrency: transaction.sourceCurrency ?? undefined,
     targetCurrency: transaction.destinationCurrency ?? undefined,
     quoteId: transaction.fxQuoteId ?? undefined,
+    exchangeRate: transaction.exchangeRate == null ? undefined : Number(transaction.exchangeRate),
+    feeAmount: transaction.feeAmount == null ? undefined : Number(transaction.feeAmount),
   };
 }
 

@@ -17,6 +17,8 @@ public record TransactionResponse(
         BigDecimal sourceAmount,
         BigDecimal destinationAmount,
         UUID fxQuoteId,
+        BigDecimal exchangeRate,
+        BigDecimal feeAmount,
         OffsetDateTime createdAt,
         OffsetDateTime completedAt
 ) {

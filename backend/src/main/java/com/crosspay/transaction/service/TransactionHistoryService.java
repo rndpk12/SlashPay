@@ -11,6 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import com.crosspay.fx.entity.FxQuote;
+import com.crosspay.fx.repository.FxQuoteRepository;
 
 @Service
 public class TransactionHistoryService {
@@ -18,16 +23,31 @@ public class TransactionHistoryService {
     private static final int MAX_PAGE_SIZE = 100;
 
     private final TransactionRepository transactionRepository;
+    private final FxQuoteRepository fxQuoteRepository;
 
-    public TransactionHistoryService(TransactionRepository transactionRepository) {
+    public TransactionHistoryService(TransactionRepository transactionRepository, FxQuoteRepository fxQuoteRepository) {
         this.transactionRepository = transactionRepository;
+        this.fxQuoteRepository = fxQuoteRepository;
+    }
+
+    /** Backward-compatible constructor for existing unit tests and integrations. */
+    public TransactionHistoryService(TransactionRepository transactionRepository) {
+        this(transactionRepository, null);
+    }
+
+    /** Returns the unfiltered default page. */
+    public TransactionHistoryResponse getTransactionHistory(UUID userId, int page, int size) {
+        return getTransactionHistory(userId, page, size, null, null, null);
     }
 
     @Transactional(readOnly = true)
     public TransactionHistoryResponse getTransactionHistory(
             UUID userId,
             int page,
-            int size
+            int size,
+            String status,
+            LocalDate from,
+            LocalDate to
     ) {
         if (userId == null) {
             throw new IllegalArgumentException("User ID is required");
@@ -46,8 +66,9 @@ public class TransactionHistoryService {
                 size,
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
-        Page<Transaction> transactions = transactionRepository
-                .findTransactionHistoryByUserId(userId, pageable);
+        OffsetDateTime fromDate = from == null ? null : from.atStartOfDay().atOffset(ZoneOffset.UTC);
+        OffsetDateTime toDate = to == null ? null : to.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
+        Page<Transaction> transactions = transactionRepository.findFilteredHistory(userId, status, fromDate, toDate, pageable);
 
         return new TransactionHistoryResponse(
                 transactions.getContent().stream()
@@ -61,6 +82,9 @@ public class TransactionHistoryService {
     }
 
     private TransactionResponse toResponse(Transaction transaction) {
+        FxQuote quote = fxQuoteRepository == null || transaction.getFxQuoteId() == null || transaction.getInitiatedByUserId() == null
+                ? null
+                : fxQuoteRepository.findByIdAndUserId(transaction.getFxQuoteId(), transaction.getInitiatedByUserId()).orElse(null);
         return new TransactionResponse(
                 transaction.getId(),
                 transaction.getSenderUserId(),
@@ -74,6 +98,8 @@ public class TransactionHistoryService {
                 transaction.getSourceAmount(),
                 transaction.getDestinationAmount(),
                 transaction.getFxQuoteId(),
+                quote == null ? null : quote.getExchangeRate(),
+                quote == null ? null : quote.getFeeAmount(),
                 transaction.getCreatedAt(),
                 transaction.getCompletedAt()
         );

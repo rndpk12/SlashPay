@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping(value = "/api/v1/transactions", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -33,12 +34,15 @@ public class TransactionController {
     public ResponseEntity<TransactionHistoryResponse> getTransactions(
             Authentication authentication,
             @Parameter(description = "Zero-based page number; must be at least 0", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size from 1 to 100; default 20", example = "20") @RequestParam(defaultValue = "20") int size
+            @Parameter(description = "Page size from 1 to 100; default 20", example = "20") @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) LocalDate from,
+            @RequestParam(required = false) LocalDate to
     ) {
         UUID userId = (UUID) authentication.getPrincipal();
 
         return ResponseEntity.ok(
-                transactionHistoryService.getTransactionHistory(userId, page, size)
+                transactionHistoryService.getTransactionHistory(userId, page, size, status, from, to)
         );
     }
 }
