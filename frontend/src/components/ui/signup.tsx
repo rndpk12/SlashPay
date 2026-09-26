@@ -4,11 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SlashPayBrand } from "@/components/slash-pay-brand";
+import {
+  isBackendConfigured,
+  loginWithBackend,
+  registerWithBackend,
+} from "@/lib/backend-api";
 import { supabase } from "@/lib/supabase";
 
 export default function Signup() {
   const navigate = useNavigate();
   const [email, setEmail] = React.useState("");
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
+  const [country, setCountry] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [error, setError] = React.useState("");
@@ -19,7 +27,7 @@ export default function Signup() {
     event.preventDefault();
     setError("");
     setMessage("");
-    if (!supabase) {
+    if (!supabase && !isBackendConfigured()) {
       setError("Authentication is not configured yet.");
       return;
     }
@@ -31,7 +39,33 @@ export default function Signup() {
       setError("Passwords do not match.");
       return;
     }
+    if (isBackendConfigured() && (!firstName.trim() || !/^[a-z]{2}$/i.test(country.trim()))) {
+      setError("Enter your first name and a two-letter country code, such as IN or US.");
+      return;
+    }
     setLoading(true);
+    if (isBackendConfigured()) {
+      try {
+        await registerWithBackend({
+          email: email.trim(),
+          password,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          country: country.trim().toUpperCase(),
+        });
+        await loginWithBackend(email.trim(), password);
+        navigate({ to: "/dashboard" });
+      } catch (signupError) {
+        setError(
+          signupError instanceof Error
+            ? signupError.message
+            : "Unable to create your account.",
+        );
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
     const { data, error: signupError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -73,6 +107,41 @@ export default function Signup() {
             </Link>
           </p>
           <form className="mt-8 space-y-5" onSubmit={submit}>
+            {isBackendConfigured() && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-first-name">First name</Label>
+                  <Input
+                    id="signup-first-name"
+                    autoComplete="given-name"
+                    value={firstName}
+                    onChange={(event) => setFirstName(event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-last-name">Last name</Label>
+                  <Input
+                    id="signup-last-name"
+                    autoComplete="family-name"
+                    value={lastName}
+                    onChange={(event) => setLastName(event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-country">Country code</Label>
+                  <Input
+                    id="signup-country"
+                    autoComplete="country"
+                    placeholder="IN"
+                    value={country}
+                    onChange={(event) => setCountry(event.target.value.toUpperCase())}
+                    maxLength={2}
+                    required
+                  />
+                </div>
+              </>
+            )}
             <div className="space-y-2">
               <Label htmlFor="signup-email">Email</Label>
               <Input

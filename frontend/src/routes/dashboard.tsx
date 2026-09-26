@@ -27,6 +27,25 @@ import {
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { SlashPayBrand } from "@/components/slash-pay-brand";
 import { createTransfer, getDashboard } from "@/services/dashboard-service";
+import {
+  clearBackendSession,
+  createBackendBalanceOperation,
+  createBackendQuote,
+  createBackendRecipient,
+  createBackendTransfer,
+  createBackendWallet,
+  deleteBackendRecipient,
+  getBackendEmail,
+  getBackendQuote,
+  getBackendRecipients,
+  getBackendToken,
+  getBackendTransactions,
+  getBackendWallets,
+  type BackendRecipient,
+  type BackendQuote,
+  type BackendWallet,
+  type BackendTransaction,
+} from "@/lib/backend-api";
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/dashboard")({
@@ -57,9 +76,11 @@ type DashboardTransfer = {
   targetAmount: number;
   status: string;
   recipientId?: string;
+  recipientLabel?: string;
   createdAt?: string;
   sourceCurrency?: string;
   targetCurrency?: string;
+  quoteId?: string;
 };
 
 function DashboardPage() {
@@ -70,16 +91,52 @@ function DashboardPage() {
   const [items, setItems] = useState<DashboardTransfer[]>(data.transactions);
   const [recipients, setRecipients] = useState<DashboardRecipient[]>([]);
   const [recipientId, setRecipientId] = useState("");
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [lockedQuote, setLockedQuote] = useState<BackendQuote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [selectedTransferId, setSelectedTransferId] = useState<string | null>(
     null,
   );
+  const [selectedQuote, setSelectedQuote] = useState<BackendQuote | null>(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [activeSection, setActiveSection] = useState("Overview");
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [accountEmail, setAccountEmail] = useState("");
+  const [wallets, setWallets] = useState<BackendWallet[]>([]);
+  async function loadBackendRecipients() {
+    const backendRecipients = await getBackendRecipients();
+    const mapped = backendRecipients.map(mapBackendRecipient);
+    setRecipients(mapped);
+    setRecipientId((current) => current || mapped[0]?.id || "");
+  }
+  async function loadBackendWallets() {
+    setWallets(await getBackendWallets());
+  }
   useEffect(() => {
+    if (getBackendToken()) {
+      setAccountEmail(getBackendEmail());
+      void getBackendTransactions()
+        .then((history) =>
+          setItems(
+            history.content
+              .filter((transaction) => transaction.recipientUserId)
+              .map(mapBackendTransaction),
+          ),
+        )
+        .catch((error) => setTransferError(formatTransferError(error)));
+      void loadBackendRecipients().catch((error) =>
+        setTransferError(formatTransferError(error)),
+      );
+      void loadBackendWallets().catch((error) =>
+        setTransferError(formatTransferError(error)),
+      );
+      return;
+    }
     const client = supabase;
     if (!client) return;
     client.auth.getSession().then(async ({ data }) => {
@@ -179,6 +236,32 @@ function DashboardPage() {
     return date.toLocaleDateString("en-US", { weekday: "long" });
   }, []);
   const sectionZoom = activeSection === "Overview" ? 0.94 : 0.88;
+  const sourceWallet = wallets.find((wallet) => wallet.currency === source);
+  const selectedRecipient = recipients.find((recipient) => recipient.id === recipientId);
+  async function openTransferConfirmation() {
+    setTransferError(null);
+    setLockedQuote(null);
+    if (value <= 0) return setTransferError("Enter a positive transfer amount.");
+    if (!recipientId) return setTransferError("Select a recipient before sending this transfer.");
+    if (getBackendToken()) {
+      if (!sourceWallet) return setTransferError(`Create a ${source} wallet before sending.`);
+      if (Number(sourceWallet.balance) < value) {
+        return setTransferError(`Insufficient ${source} balance. Available: ${Number(sourceWallet.balance).toFixed(2)} ${source}.`);
+      }
+      setQuoteLoading(true);
+      try {
+        const quote = await createBackendQuote(value, source, target);
+        setLockedQuote(quote);
+        setConfirmationOpen(true);
+      } catch (error) {
+        setTransferError(formatTransferError(error));
+      } finally {
+        setQuoteLoading(false);
+      }
+      return;
+    }
+    setConfirmationOpen(true);
+  }
   async function send() {
     if (value <= 0 || sending) return;
     if (!recipientId) {
@@ -188,6 +271,29 @@ function DashboardPage() {
     setSending(true);
     setTransferError(null);
     try {
+      if (getBackendToken()) {
+        if (!lockedQuote) throw new Error("Create a fresh quote before confirming this transfer.");
+        const transfer = await createBackendTransfer(recipientId, lockedQuote.id, value);
+        const recipient = recipients.find((item) => item.id === recipientId);
+        setItems((current) => [
+          {
+            id: transfer.transactionId,
+            amount: Number(transfer.sourceAmount),
+            targetAmount: Number(transfer.destinationAmount),
+            status: transfer.status.toLowerCase(),
+            recipientId: transfer.recipientUserId,
+            recipientLabel: recipient?.name ?? "Recipient",
+            createdAt: transfer.completedAt ?? transfer.createdAt,
+            sourceCurrency: transfer.sourceCurrency,
+            targetCurrency: transfer.destinationCurrency,
+            quoteId: lockedQuote.id,
+          },
+          ...current,
+        ]);
+        void loadBackendWallets();
+        setConfirmationOpen(false);
+        return;
+      }
       if (supabase) {
         const { data: sessionData } = await supabase.auth.getSession();
         const userId = sessionData.session?.user.id;
@@ -224,12 +330,14 @@ function DashboardPage() {
             },
             ...current,
           ]);
+          setConfirmationOpen(false);
         }
       } else {
         const transfer = await createTransfer({
           data: { amount: value, source, target },
         });
         setItems((current) => [{ ...transfer, recipientId }, ...current]);
+        setConfirmationOpen(false);
       }
     } catch (error) {
       setTransferError(formatTransferError(error));
@@ -263,12 +371,113 @@ function DashboardPage() {
     }
   }
   const selectedTransfer = items.find((item) => item.id === selectedTransferId);
+  const filteredTransfers = items.filter((item) => {
+    if (statusFilter !== "all" && item.status !== statusFilter) return false;
+    const created = item.createdAt ? new Date(item.createdAt) : null;
+    if (dateFrom && (!created || created < new Date(`${dateFrom}T00:00:00`))) return false;
+    if (dateTo && (!created || created > new Date(`${dateTo}T23:59:59`))) return false;
+    return true;
+  });
+  useEffect(() => {
+    setSelectedQuote(null);
+    if (!selectedTransfer?.quoteId || !getBackendToken()) return;
+    void getBackendQuote(selectedTransfer.quoteId)
+      .then(setSelectedQuote)
+      .catch(() => setSelectedQuote(null));
+  }, [selectedTransfer?.quoteId]);
   async function signOut() {
+    clearBackendSession();
     if (supabase) await supabase.auth.signOut();
     window.location.href = "/login";
   }
   return (
     <main className="min-h-screen bg-white text-[#0e0f0c]">
+      {confirmationOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/35 p-5"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-transfer-title"
+        >
+          <div className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#57744a]">
+              Review transfer
+            </p>
+            <h2 id="confirm-transfer-title" className="mt-2 text-2xl font-bold">
+              Confirm your transfer
+            </h2>
+            <div className="mt-6 grid gap-4 rounded-2xl bg-[#f5f7f3] p-4 text-sm">
+              <p><span className="text-[#747674]">Recipient</span><br /><strong>{selectedRecipient?.name ?? "Recipient"}</strong></p>
+              <div className="grid grid-cols-2 gap-4">
+                <p><span className="text-[#747674]">You send</span><br /><strong>{(lockedQuote?.sourceAmount ?? value).toFixed(2)} {source}</strong></p>
+                <p><span className="text-[#747674]">Recipient gets</span><br /><strong>{(lockedQuote?.convertedAmount ?? received).toFixed(2)} {target}</strong></p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <p><span className="text-[#747674]">Rate</span><br /><strong>1 {source} = {(lockedQuote?.exchangeRate ?? rate).toFixed(4)} {target}</strong></p>
+                <p><span className="text-[#747674]">Fee</span><br /><strong>{(lockedQuote?.feeAmount ?? fee).toFixed(2)} {source}</strong></p>
+              </div>
+              {getBackendToken() && (
+                <p><span className="text-[#747674]">Available {source} balance</span><br /><strong>{Number(sourceWallet?.balance ?? 0).toFixed(2)} {source}</strong></p>
+              )}
+            </div>
+            <p className="mt-4 text-xs leading-5 text-[#747674]">
+              This creates an internal ledger transfer. It cannot be undone from this screen.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button type="button" onClick={() => { setConfirmationOpen(false); setLockedQuote(null); }} disabled={sending} className="flex-1 rounded-full border border-[#cfd3cc] px-4 py-3 text-sm font-semibold">Cancel</button>
+              <button type="button" onClick={() => void send()} disabled={sending} className="flex-1 rounded-full bg-[#163300] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{sending ? "Sending…" : "Confirm transfer"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {selectedTransfer && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/35 p-5"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="transfer-details-title"
+        >
+          <div className="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#57744a]">Transfer details</p>
+                <h2 id="transfer-details-title" className="mt-2 text-2xl font-bold">{selectedTransfer.recipientLabel || recipients.find((recipient) => recipient.id === selectedTransfer.recipientId)?.name || "Recipient"}</h2>
+                <p className="mt-1 text-xs text-[#747674]">{formatTransferDate(selectedTransfer.createdAt)}</p>
+              </div>
+              <button type="button" onClick={() => setSelectedTransferId(null)} className="rounded-full px-3 py-1 text-xl text-[#747674] hover:bg-[#f4f5f3]" aria-label="Close transfer details">×</button>
+            </div>
+            <div className="mt-6 grid gap-3 rounded-2xl bg-[#f5f7f3] p-4 text-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <p><span className="text-[#747674]">You sent</span><br /><strong>{selectedTransfer.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedTransfer.sourceCurrency || source}</strong></p>
+                <p><span className="text-[#747674]">Recipient gets</span><br /><strong>{selectedTransfer.targetAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedTransfer.targetCurrency || target}</strong></p>
+              </div>
+              {selectedQuote && (
+                <div className="grid grid-cols-2 gap-4 border-t border-[#e1e4df] pt-3">
+                  <p><span className="text-[#747674]">FX rate</span><br /><strong>1 {selectedQuote.fromCurrency} = {Number(selectedQuote.exchangeRate).toFixed(4)} {selectedQuote.toCurrency}</strong></p>
+                  <p><span className="text-[#747674]">Fee</span><br /><strong>{Number(selectedQuote.feeAmount).toFixed(2)} {selectedQuote.fromCurrency}</strong></p>
+                </div>
+              )}
+              <p><span className="text-[#747674]">Transfer ID</span><br /><strong className="break-all font-mono text-xs">{selectedTransfer.id}</strong></p>
+            </div>
+            <div className="mt-6">
+              <p className="text-sm font-semibold">Status</p>
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <span className="size-2 rounded-full bg-[#9fe870]" />
+                <span className="capitalize">{selectedTransfer.status}</span>
+                <span className="text-[#b0b4ae]">·</span>
+                <span className="text-[#747674]">Internal ledger transfer</span>
+              </div>
+            </div>
+            {selectedTransfer.status === "processing" && (
+              <div className="mt-6 flex flex-wrap gap-2">
+                <button type="button" onClick={() => void updateTransferStatus(selectedTransfer.id, "completed")} className="rounded-full bg-[#9fe870] px-4 py-2 text-xs font-semibold text-[#163300]">Mark completed</button>
+                <button type="button" onClick={() => void updateTransferStatus(selectedTransfer.id, "failed")} className="rounded-full border border-[#c85b52] px-4 py-2 text-xs font-semibold text-[#b64940]">Mark failed</button>
+              </div>
+            )}
+            <button type="button" onClick={() => setSelectedTransferId(null)} className="mt-6 w-full rounded-full border border-[#cfd3cc] px-4 py-3 text-sm font-semibold">Close</button>
+          </div>
+        </div>
+      )}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-[280px] border-r border-[#e6e8e4] bg-white px-5 py-9 lg:flex lg:flex-col">
         <Link to="/" aria-label="Slash Pay home" className="ml-3 w-40">
           <SlashPayBrand className="h-auto w-full" />
@@ -480,10 +689,16 @@ function DashboardPage() {
                 <div className="rounded-[22px] border border-[#e7e9e5] bg-[#fafbfa] p-5 sm:p-6">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm text-[#747674]">Balance</p>
-                      <p className="mt-1 text-[34px] font-bold">$5.5k</p>
+                      <p className="text-sm text-[#747674]">Wallet balances</p>
+                      <p className="mt-1 text-[26px] font-bold">
+                        {wallets.length
+                          ? wallets
+                              .map((wallet) => `${wallet.currency} ${Number(wallet.balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}`)
+                              .join(" · ")
+                          : "No wallets yet"}
+                      </p>
                       <span className="mt-2 inline-block rounded-full bg-[#e4f7d7] px-2 py-1 text-xs font-semibold text-[#3f7a1d]">
-                        ↗ 100%
+                        {wallets.length} active {wallets.length === 1 ? "wallet" : "wallets"}
                       </span>
                     </div>
                     <div className="hidden gap-4 text-xs text-[#747674] sm:flex">
@@ -504,34 +719,19 @@ function DashboardPage() {
                   <h2 className="text-lg font-bold">Activities</h2>
                   <p className="text-xs text-[#858785]">Latest updates</p>
                   <div className="mt-5 grid gap-5 text-sm">
-                    <p>
-                      <strong>Invoice INV-0001</strong>
-                      <br />
-                      <span className="text-[#747674]">
-                        marked as paid · 1 hour ago
-                      </span>
-                    </p>
-                    <p>
-                      <strong>Payment of $7,300 USD</strong>
-                      <br />
-                      <span className="text-[#747674]">
-                        added to invoice · 1 hour ago
-                      </span>
-                    </p>
-                    <p>
-                      <strong>Task time tracking</strong>
-                      <br />
-                      <span className="text-[#747674]">
-                        deleted · 2 hours ago
-                      </span>
-                    </p>
-                    <p>
-                      <strong>New note: Website redesign</strong>
-                      <br />
-                      <span className="text-[#747674]">
-                        added · 2 hours ago
-                      </span>
-                    </p>
+                    {items.length === 0 ? (
+                      <p className="text-[#747674]">No wallet activity yet.</p>
+                    ) : (
+                      items.slice(0, 4).map((item) => (
+                        <p key={item.id}>
+                          <strong>{item.status === "completed" ? "Completed transfer" : "Transfer"}</strong>
+                          <br />
+                          <span className="text-[#747674]">
+                            {item.amount.toLocaleString()} {item.sourceCurrency} → {item.targetAmount.toLocaleString()} {item.targetCurrency} · {formatTransferDate(item.createdAt)}
+                          </span>
+                        </p>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -801,12 +1001,12 @@ function DashboardPage() {
                     </span>
                   </div>
                   <button
-                    onClick={send}
-                    disabled={sending || value <= 0}
+                    onClick={() => void openTransferConfirmation()}
+                    disabled={sending || quoteLoading || value <= 0}
                     type="button"
                     className="mt-5 w-full rounded-full bg-[#9fe870] py-4 font-semibold text-[#163300] disabled:opacity-50"
                   >
-                    {sending ? "Sending..." : "Send"}
+                    {quoteLoading ? "Getting quote..." : sending ? "Sending..." : "Send"}
                   </button>
                   {transferError && (
                     <p className="mt-3 rounded-xl bg-[#fff1ef] px-4 py-3 text-sm text-[#b44336]">
@@ -818,16 +1018,26 @@ function DashboardPage() {
                   <div className="flex items-center justify-between">
                     <h2 className="font-semibold">Recent transfers</h2>
                     <span className="text-xs text-[#747674]">
-                      {items.length} total
+                      {filteredTransfers.length} shown · {items.length} total
                     </span>
                   </div>
-                  {items.length === 0 ? (
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="rounded-xl border border-[#e1e4df] bg-white px-3 py-2 text-xs outline-none">
+                      <option value="all">All statuses</option>
+                      <option value="processing">Processing</option>
+                      <option value="completed">Completed</option>
+                      <option value="failed">Failed</option>
+                    </select>
+                    <input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} aria-label="Transfers from date" className="rounded-xl border border-[#e1e4df] px-3 py-2 text-xs" />
+                    <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} aria-label="Transfers to date" className="rounded-xl border border-[#e1e4df] px-3 py-2 text-xs" />
+                  </div>
+                  {filteredTransfers.length === 0 ? (
                     <p className="mt-4 text-sm text-[#747674]">
-                      No transfers yet. Your completed sends will appear here.
+                      {items.length === 0 ? "No transfers yet. Your completed sends will appear here." : "No transfers match these filters."}
                     </p>
                   ) : (
                     <div className="mt-3 divide-y divide-[#e6e8e4]">
-                      {items.slice(0, 5).map((item) => (
+                      {filteredTransfers.slice(0, 5).map((item) => (
                         <div
                           key={item.id}
                           className="flex cursor-pointer items-center justify-between gap-4 rounded-xl py-3 text-left text-sm transition hover:bg-[#fafbfa]"
@@ -845,7 +1055,7 @@ function DashboardPage() {
                               {recipients.find(
                                 (recipient) =>
                                   recipient.id === item.recipientId,
-                              )?.name || "Recipient"}
+                              )?.name || item.recipientLabel || "Recipient"}
                             </p>
                             <p className="font-semibold">
                               {item.amount.toLocaleString(undefined, {
@@ -870,65 +1080,18 @@ function DashboardPage() {
                       ))}
                     </div>
                   )}
-                  {selectedTransfer && (
-                    <div className="mt-4 rounded-2xl bg-[#fafbfa] p-4 text-sm">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="font-semibold">Transfer details</p>
-                          <p className="mt-1 text-xs text-[#747674]">
-                            {recipients.find(
-                              (recipient) =>
-                                recipient.id === selectedTransfer.recipientId,
-                            )?.name || "Recipient"}
-                            {" · "}
-                            {formatTransferDate(selectedTransfer.createdAt)}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-[#e4f7d7] px-3 py-1 text-xs font-medium capitalize text-[#3f7a1d]">
-                          {selectedTransfer.status}
-                        </span>
-                      </div>
-                      {selectedTransfer.status === "processing" && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void updateTransferStatus(
-                                selectedTransfer.id,
-                                "completed",
-                              )
-                            }
-                            className="rounded-full bg-[#9fe870] px-4 py-2 text-xs font-semibold text-[#163300]"
-                          >
-                            Mark completed
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void updateTransferStatus(
-                                selectedTransfer.id,
-                                "failed",
-                              )
-                            }
-                            className="rounded-full border border-[#c85b52] px-4 py-2 text-xs font-semibold text-[#b64940]"
-                          >
-                            Mark failed
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
           ) : activeSection === "Recipients" ? (
             <RecipientsSection
               onSend={() => setActiveSection("Payments / Transfers")}
+              onRecipientsChanged={() => void loadBackendRecipients()}
             />
           ) : activeSection === "Invoices" ? (
             <InvoicesSection />
           ) : activeSection === "Balances and currencies" ? (
-            <BalancesSection />
+            <BalancesSection onWalletsChanged={() => void loadBackendWallets()} />
           ) : activeSection === "Reports" ? (
             <ReportsSection />
           ) : activeSection === "Settings and security" ? (
@@ -1503,7 +1666,33 @@ type BalanceActivity = {
   status?: string;
 };
 
-function BalancesSection() {
+function mapBackendActivity(transaction: BackendTransaction): BalanceActivity {
+  const type = transaction.transactionType.toLowerCase();
+  const kind = type.includes("withdraw")
+    ? "withdrawal"
+    : type.includes("deposit")
+      ? "deposit"
+      : "transfer";
+  const amount = Number(transaction.sourceAmount ?? transaction.amount ?? 0);
+  const currency = transaction.sourceCurrency ?? transaction.currency ?? "";
+  const detail =
+    kind === "deposit"
+      ? "Wallet deposit"
+      : kind === "withdrawal"
+        ? "Wallet withdrawal"
+        : `Transfer to ${transaction.destinationCurrency ?? "recipient"}`;
+  return {
+    id: transaction.transactionId,
+    kind,
+    amount,
+    currency,
+    detail,
+    createdAt: transaction.completedAt ?? transaction.createdAt ?? new Date().toISOString(),
+    status: transaction.status.toLowerCase(),
+  };
+}
+
+function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }) {
   const [balances, setBalances] = useState<BalanceRecord[]>([]);
   const [currency, setCurrency] = useState("USD");
   const [actionCurrency, setActionCurrency] = useState("USD");
@@ -1512,9 +1701,28 @@ function BalancesSection() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activities, setActivities] = useState<BalanceActivity[]>([]);
+  const [activityCurrency, setActivityCurrency] = useState("all");
   const currencies = ["USD", "EUR", "GBP", "INR"];
 
   useEffect(() => {
+    if (getBackendToken()) {
+      void Promise.all([getBackendWallets(), getBackendTransactions()])
+        .then(([walletRows, history]) => {
+          setBalances(
+            walletRows.map((wallet) => ({
+              id: wallet.id,
+              currency: wallet.currency,
+              available: Number(wallet.balance),
+              pending: 0,
+            })),
+          );
+          setActionCurrency(walletRows[0]?.currency || "USD");
+          setActivities(history.content.map(mapBackendActivity));
+        })
+        .catch((loadError) => setError(formatTransferError(loadError)))
+        .finally(() => setLoading(false));
+      return;
+    }
     const client = supabase;
     if (!client) {
       setLoading(false);
@@ -1566,6 +1774,31 @@ function BalancesSection() {
 
   async function addCurrency(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (getBackendToken()) {
+      setSaving(true);
+      setError(null);
+      try {
+        const wallet = await createBackendWallet(currency);
+        const record = {
+          id: wallet.id,
+          currency: wallet.currency,
+          available: Number(wallet.balance),
+          pending: 0,
+        };
+        setBalances((current) =>
+          current.some((item) => item.id === record.id)
+            ? current
+            : [...current, record].sort((a, b) => a.currency.localeCompare(b.currency)),
+        );
+        setActionCurrency(wallet.currency);
+        onWalletsChanged?.();
+      } catch (insertError) {
+        setError(formatTransferError(insertError));
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
     if (!supabase) return;
     setSaving(true);
     setError(null);
@@ -1612,6 +1845,39 @@ function BalancesSection() {
     event.preventDefault();
     const value = Number(amount);
     const balance = balances.find((item) => item.currency === actionCurrency);
+    if (getBackendToken()) {
+      if (!balance || !Number.isFinite(value) || value <= 0) {
+        setError(balance ? "Enter a positive amount." : "Add this currency first.");
+        return;
+      }
+      setSaving(true);
+      setError(null);
+      try {
+        await createBackendBalanceOperation(
+          direction === "deposit" ? "deposit" : "withdrawal",
+          value,
+          actionCurrency,
+        );
+        const [walletRows, history] = await Promise.all([
+          getBackendWallets(),
+          getBackendTransactions(),
+        ]);
+        setBalances(walletRows.map((wallet) => ({
+          id: wallet.id,
+          currency: wallet.currency,
+          available: Number(wallet.balance),
+          pending: 0,
+        })));
+        setActivities(history.content.map(mapBackendActivity));
+        setAmount("");
+        onWalletsChanged?.();
+      } catch (operationError) {
+        setError(formatTransferError(operationError));
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
     if (!supabase || !balance || !Number.isFinite(value) || value <= 0) {
       setError(
         balance ? "Enter a positive amount." : "Add this currency first.",
@@ -1667,6 +1933,7 @@ function BalancesSection() {
     0,
   );
   const totalPending = balances.reduce((sum, item) => sum + item.pending, 0);
+  const visibleActivities = activities.filter((activity) => activityCurrency === "all" || activity.currency === activityCurrency);
 
   return (
     <div className="mt-6">
@@ -1811,16 +2078,20 @@ function BalancesSection() {
             </p>
           </div>
           <span className="text-xs text-[#747674]">
-            {activities.length} items
+            {visibleActivities.length} items
           </span>
         </div>
-        {activities.length === 0 ? (
+        <select value={activityCurrency} onChange={(event) => setActivityCurrency(event.target.value)} className="mt-4 rounded-xl border border-[#dfe2dd] bg-white px-3 py-2 text-xs outline-none">
+          <option value="all">All currencies</option>
+          {balances.map((item) => <option key={item.currency} value={item.currency}>{item.currency}</option>)}
+        </select>
+        {visibleActivities.length === 0 ? (
           <p className="mt-5 text-sm text-[#747674]">
             No balance activity yet.
           </p>
         ) : (
           <div className="mt-4 divide-y divide-[#eef0ed]">
-            {activities.slice(0, 8).map((activity) => (
+            {visibleActivities.slice(0, 12).map((activity) => (
               <div
                 key={activity.id}
                 className="flex flex-wrap items-center justify-between gap-3 py-3"
@@ -2261,9 +2532,11 @@ function InvoicesSection() {
 
 function RecipientsSection({
   onSend,
+  onRecipientsChanged,
   wide = false,
 }: {
   onSend: () => void;
+  onRecipientsChanged?: () => void;
   wide?: boolean;
 }) {
   type Recipient = {
@@ -2308,7 +2581,14 @@ function RecipientsSection({
     currency: "USD",
     account: "",
   });
+  const backendMode = Boolean(getBackendToken());
   useEffect(() => {
+    if (backendMode) {
+      void getBackendRecipients().then((rows) => {
+        setRecipients(rows.map(mapBackendRecipientForSection));
+      });
+      return;
+    }
     const client = supabase;
     if (!client) return;
     Promise.all([
@@ -2329,6 +2609,26 @@ function RecipientsSection({
   }, []);
   async function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (backendMode) {
+      if (!form.email.trim()) {
+        setRecipientError("Enter the email address of an existing Cross Pay user.");
+        return;
+      }
+      setSaving(true);
+      try {
+        const row = await createBackendRecipient(form.email.trim());
+        setRecipients((current) => [mapBackendRecipientForSection(row), ...current.filter((item) => item.id !== row.recipientUserId)]);
+        setRecipientError(null);
+        setForm({ name: "", email: "", country: "", currency: "EUR", account: "" });
+        setShowForm(false);
+        onRecipientsChanged?.();
+      } catch (error) {
+        setRecipientError(formatTransferError(error));
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
     if (!supabase || !form.name.trim() || !form.account.trim()) return;
     setSaving(true);
     const { data: session } = await supabase.auth.getSession();
@@ -2375,6 +2675,17 @@ function RecipientsSection({
     setSaving(false);
   }
   async function remove(id: string) {
+    if (backendMode) {
+      if (!window.confirm("Remove this recipient?")) return;
+      try {
+        await deleteBackendRecipient(id);
+        setRecipients((current) => current.filter((item) => item.id !== id));
+        onRecipientsChanged?.();
+      } catch (error) {
+        setRecipientError(formatTransferError(error));
+      }
+      return;
+    }
     if (
       !supabase ||
       !window.confirm("Delete this recipient? This action cannot be undone.")
@@ -2496,7 +2807,7 @@ function RecipientsSection({
           className="mt-6 grid gap-3 rounded-[20px] border border-[#e3e6e1] bg-[#fafbfa] p-5 sm:grid-cols-2"
         >
           <input
-            required
+            required={!backendMode}
             placeholder="Account holder name"
             value={form.name}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
@@ -2504,7 +2815,8 @@ function RecipientsSection({
           />
           <input
             type="email"
-            placeholder="Email (optional)"
+            required={backendMode}
+            placeholder={backendMode ? "Existing Cross Pay user email" : "Email (optional)"}
             value={form.email}
             onChange={(event) =>
               setForm({ ...form, email: event.target.value })
@@ -2532,7 +2844,7 @@ function RecipientsSection({
             <option>INR</option>
           </select>
           <input
-            required
+            required={!backendMode}
             placeholder="IBAN / account number"
             value={form.account}
             onChange={(event) =>
@@ -2575,6 +2887,11 @@ function RecipientsSection({
           {recipientError && (
             <p className="rounded-xl bg-[#fff1ef] px-4 py-3 text-sm text-[#b44336] sm:col-span-2">
               {recipientError}
+            </p>
+          )}
+          {backendMode && (
+            <p className="text-xs text-[#747674] sm:col-span-2">
+              The recipient must already have a Cross Pay account. Their internal account is used for transfers.
             </p>
           )}
         </form>
@@ -2903,6 +3220,42 @@ function formatTransferError(error: unknown) {
   }
   if (error instanceof Error) return error.message;
   return "Unable to save this transfer. Check your Supabase connection and try again.";
+}
+
+function mapBackendTransaction(transaction: BackendTransaction): DashboardTransfer {
+  const shortRecipientId = transaction.recipientUserId?.slice(0, 8);
+  return {
+    id: transaction.transactionId,
+    amount: Number(transaction.sourceAmount ?? transaction.amount ?? 0),
+    targetAmount: Number(transaction.destinationAmount ?? transaction.amount ?? 0),
+    status: transaction.status.toLowerCase(),
+    recipientId: transaction.recipientUserId,
+    recipientLabel: shortRecipientId ? `Recipient ${shortRecipientId}` : "Recipient",
+    createdAt: transaction.completedAt ?? transaction.createdAt ?? undefined,
+    sourceCurrency: transaction.sourceCurrency ?? undefined,
+    targetCurrency: transaction.destinationCurrency ?? undefined,
+    quoteId: transaction.fxQuoteId ?? undefined,
+  };
+}
+
+function mapBackendRecipient(recipient: BackendRecipient): DashboardRecipient {
+  return {
+    id: recipient.recipientUserId,
+    name: recipient.name,
+    currency: "Internal",
+    account_identifier: recipient.recipientUserId,
+  };
+}
+
+function mapBackendRecipientForSection(recipient: BackendRecipient) {
+  return {
+    id: recipient.recipientUserId,
+    name: recipient.name,
+    email: recipient.email,
+    country: recipient.country,
+    currency: "Internal",
+    account_identifier: recipient.recipientUserId,
+  };
 }
 
 function formatTransferDate(value?: string) {

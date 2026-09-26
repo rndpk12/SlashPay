@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SlashPayBrand } from "@/components/slash-pay-brand";
 import googleLogo from "@/assets/google-logo-v2.webp";
+import { isBackendConfigured, loginWithBackend } from "@/lib/backend-api";
 import { supabase } from "@/lib/supabase";
 
 const GoogleIcon = () => (
@@ -30,6 +31,22 @@ export default function Login2() {
   async function signIn(provider: "password" | "google") {
     setError("");
     setLoading(true);
+    if (provider === "password" && isBackendConfigured()) {
+      try {
+        await loginWithBackend(email.trim(), password);
+        navigate({ to: "/dashboard" });
+      } catch (loginError) {
+        setError(loginError instanceof Error ? loginError.message : "Unable to sign in.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    if (provider === "google" && isBackendConfigured()) {
+      setError("Google sign-in is not available for the local backend yet.");
+      setLoading(false);
+      return;
+    }
     if (!supabase) {
       setError(
         "Authentication is not configured yet. Add the Supabase environment variables.",
