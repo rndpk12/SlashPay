@@ -99,26 +99,28 @@ export default function Login2() {
               Sign up
             </Link>
           </p>
-          <div className="mt-8 flex justify-center">
-            <Button
-              variant="outline"
-              disabled={loading}
-              onClick={() => void signIn("google")}
-              className="!h-12 !min-h-12 !w-full !max-w-md !gap-3 !rounded-full !px-6 !text-base"
-              style={{
-                height: 48,
-                minHeight: 48,
-                maxHeight: 48,
-                fontSize: 16,
-                lineHeight: "20px",
-              }}
-              type="button"
-            >
-              <GoogleIcon />
-              {loading ? "Signing in…" : "Login with Google"}
-            </Button>
-          </div>
-          <div className="relative my-7">
+          {!isBackendConfigured() && (
+            <div className="mt-8 flex justify-center">
+              <Button
+                variant="outline"
+                disabled={loading}
+                onClick={() => void signIn("google")}
+                className="!h-12 !min-h-12 !w-full !max-w-md !gap-3 !rounded-full !px-6 !text-base"
+                style={{
+                  height: 48,
+                  minHeight: 48,
+                  maxHeight: 48,
+                  fontSize: 16,
+                  lineHeight: "20px",
+                }}
+                type="button"
+              >
+                <GoogleIcon />
+                {loading ? "Signing in…" : "Login with Google"}
+              </Button>
+            </div>
+          )}
+          <div className={`relative ${isBackendConfigured() ? "my-8" : "my-7"}`}>
             <div className="absolute inset-0 flex items-center">
               <Separator />
             </div>
