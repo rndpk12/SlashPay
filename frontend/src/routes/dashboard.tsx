@@ -1944,12 +1944,18 @@ function BalancesSection({
   const [activities, setActivities] = useState<BalanceActivity[]>([]);
   const [activityCurrency, setActivityCurrency] = useState("all");
   const [ledgerPage, setLedgerPage] = useState(0);
+  const [backendLedgerPage, setBackendLedgerPage] = useState(0);
+  const [backendLedgerTotalPages, setBackendLedgerTotalPages] = useState(1);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
   const ledgerPageSize = 10;
   const currencies = ["USD", "EUR", "GBP", "INR"];
 
   useEffect(() => {
     if (getBackendToken()) {
-      void Promise.all([getBackendWallets(), getBackendTransactions()])
+      void Promise.all([
+        getBackendWallets(),
+        getBackendTransactions({ page: 0, size: 20 }),
+      ])
         .then(([walletRows, history]) => {
           setBalances(
             walletRows.map((wallet) => ({
@@ -1961,6 +1967,8 @@ function BalancesSection({
           );
           setActionCurrency(walletRows[0]?.currency || "USD");
           setActivities(history.content.map(mapBackendActivity));
+          setBackendLedgerPage(history.page);
+          setBackendLedgerTotalPages(history.totalPages);
         })
         .catch((loadError) => setError(formatTransferError(loadError)))
         .finally(() => setLoading(false));
@@ -2108,7 +2116,7 @@ function BalancesSection({
         setReceipt(operationReceipt);
         const [walletRows, history] = await Promise.all([
           getBackendWallets(),
-          getBackendTransactions(),
+          getBackendTransactions({ page: 0, size: 20 }),
         ]);
         setBalances(
           walletRows.map((wallet) => ({
@@ -2119,6 +2127,8 @@ function BalancesSection({
           })),
         );
         setActivities(history.content.map(mapBackendActivity));
+        setBackendLedgerPage(history.page);
+        setBackendLedgerTotalPages(history.totalPages);
         setAmount("");
         onWalletsChanged?.();
       } catch (operationError) {
@@ -2191,6 +2201,27 @@ function BalancesSection({
     ledgerPage * ledgerPageSize,
     (ledgerPage + 1) * ledgerPageSize,
   );
+  async function loadMoreBackendLedger() {
+    if (!getBackendToken() || backendLedgerPage + 1 >= backendLedgerTotalPages)
+      return;
+    setLedgerLoading(true);
+    try {
+      const history = await getBackendTransactions({
+        page: backendLedgerPage + 1,
+        size: 20,
+      });
+      setActivities((current) => [
+        ...current,
+        ...history.content.map(mapBackendActivity),
+      ]);
+      setBackendLedgerPage(history.page);
+      setBackendLedgerTotalPages(history.totalPages);
+    } catch (loadError) {
+      setError(formatTransferError(loadError));
+    } finally {
+      setLedgerLoading(false);
+    }
+  }
   function exportLedger() {
     const header = "id,type,currency,amount,status,created_at";
     const rows = visibleActivities.map((activity) =>
@@ -2468,6 +2499,17 @@ function BalancesSection({
             </button>
           </div>
         )}
+        {getBackendToken() &&
+          backendLedgerPage + 1 < backendLedgerTotalPages && (
+            <button
+              type="button"
+              disabled={ledgerLoading}
+              onClick={() => void loadMoreBackendLedger()}
+              className="mt-4 w-full rounded-full border border-[#cfd3cc] px-3 py-2 text-xs font-semibold disabled:opacity-40"
+            >
+              {ledgerLoading ? "Loading ledger…" : "Load older activity"}
+            </button>
+          )}
       </div>
     </div>
   );

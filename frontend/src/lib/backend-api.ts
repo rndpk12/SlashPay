@@ -24,7 +24,13 @@ export type BackendTransaction = {
 };
 
 type LoginResponse = { accessToken: string; tokenType: string };
-type TransactionHistoryResponse = { content: BackendTransaction[] };
+export type TransactionHistoryResponse = {
+  content: BackendTransaction[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
 
 export type BackendRecipient = {
   recipientUserId: string;
