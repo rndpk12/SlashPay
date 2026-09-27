@@ -1940,6 +1940,7 @@ function BalancesSection({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [receipt, setReceipt] = useState<BackendOperationReceipt | null>(null);
   const [activities, setActivities] = useState<BalanceActivity[]>([]);
   const [activityCurrency, setActivityCurrency] = useState("all");
   const [ledgerPage, setLedgerPage] = useState(0);
