@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { SlashPayBrand } from "@/components/slash-pay-brand";
-import { createTransfer, getDashboard } from "@/services/dashboard-service";
+import { createTransfer, getDashboardData } from "@/services/dashboard-service";
 import {
   clearBackendSession,
   createBackendBalanceOperation,
@@ -50,7 +50,7 @@ import {
 import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/dashboard")({
-  loader: () => getDashboard(),
+  loader: () => getDashboardData(),
   component: DashboardPage,
 });
 
@@ -141,43 +141,54 @@ function DashboardPage() {
       return;
     }
     const client = supabase;
-    if (!client) return;
-    client.auth.getSession().then(async ({ data }) => {
-      if (!data.session) {
+    if (!client) {
+      window.location.href = "/login";
+      return;
+    }
+    client.auth
+      .getSession()
+      .then(async ({ data, error: sessionError }) => {
+        if (sessionError) throw sessionError;
+        if (!data.session) {
+          window.location.href = "/login";
+          return;
+        }
+        setAccountEmail(data.session.user.email ?? "");
+        const { data: transfers, error: transfersError } = await client
+          .from("transfers")
+          .select(
+            "id, amount, target_amount, status, recipient_id, created_at, source_currency, target_currency",
+          )
+          .order("created_at", { ascending: false });
+        if (transfersError)
+          setTransferError(formatTransferError(transfersError));
+        if (transfers) {
+          setItems(
+            transfers.map((transfer) => ({
+              id: transfer.id,
+              amount: Number(transfer.amount),
+              targetAmount: Number(transfer.target_amount),
+              status: transfer.status,
+              recipientId: transfer.recipient_id ?? undefined,
+              createdAt: transfer.created_at ?? undefined,
+              sourceCurrency: transfer.source_currency ?? undefined,
+              targetCurrency: transfer.target_currency ?? undefined,
+            })),
+          );
+        }
+        const { data: recipientRows } = await client
+          .from("recipients")
+          .select("id, name, currency, account_identifier")
+          .order("created_at", { ascending: false });
+        if (recipientRows) {
+          setRecipients(recipientRows);
+          setRecipientId((current) => current || recipientRows[0]?.id || "");
+        }
+      })
+      .catch((error) => {
+        setTransferError(formatTransferError(error));
         window.location.href = "/login";
-        return;
-      }
-      setAccountEmail(data.session.user.email ?? "");
-      const { data: transfers, error: transfersError } = await client
-        .from("transfers")
-        .select(
-          "id, amount, target_amount, status, recipient_id, created_at, source_currency, target_currency",
-        )
-        .order("created_at", { ascending: false });
-      if (transfersError) setTransferError(formatTransferError(transfersError));
-      if (transfers) {
-        setItems(
-          transfers.map((transfer) => ({
-            id: transfer.id,
-            amount: Number(transfer.amount),
-            targetAmount: Number(transfer.target_amount),
-            status: transfer.status,
-            recipientId: transfer.recipient_id ?? undefined,
-            createdAt: transfer.created_at ?? undefined,
-            sourceCurrency: transfer.source_currency ?? undefined,
-            targetCurrency: transfer.target_currency ?? undefined,
-          })),
-        );
-      }
-      const { data: recipientRows } = await client
-        .from("recipients")
-        .select("id, name, currency, account_identifier")
-        .order("created_at", { ascending: false });
-      if (recipientRows) {
-        setRecipients(recipientRows);
-        setRecipientId((current) => current || recipientRows[0]?.id || "");
-      }
-    });
+      });
   }, []);
   const [includeFees, setIncludeFees] = useState(true);
   const [liveRate, setLiveRate] = useState<number | null>(null);

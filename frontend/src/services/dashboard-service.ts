@@ -9,17 +9,23 @@ const transferInput = z.object({
   target: z.string().length(3),
 });
 
-export const getDashboard = createServerFn({ method: "GET" }).handler(() => ({
-  profile: { initials: "RD", name: "R N Dhanapraveenkrishna" },
-  currencies: {
-    source: "INR",
-    target: "USD",
-    rates: currencyRates,
-    updatedAt: "Just now",
-  },
-  reward: "Earn ₹9,000",
-  transactions: [],
-}));
+export function getDashboardData() {
+  return {
+    profile: { initials: "RD", name: "R N Dhanapraveenkrishna" },
+    currencies: {
+      source: "INR",
+      target: "USD",
+      rates: currencyRates,
+      updatedAt: "Just now",
+    },
+    reward: "Earn ₹9,000",
+    transactions: [],
+  };
+}
+
+export const getDashboard = createServerFn({ method: "GET" }).handler(
+  getDashboardData,
+);
 
 export const createTransfer = createServerFn({ method: "POST" })
   .validator((data: unknown) => transferInput.parse(data))
