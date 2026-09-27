@@ -554,6 +554,42 @@ For production, set this variable to the deployed Render backend URL.
 
 ---
 
+## Production Verification
+
+The production frontend is deployed at `https://slash-pay.vercel.app`.
+
+### Google OAuth
+
+1. Enable the Google provider in Supabase Authentication.
+2. Configure the production site URL as `https://slash-pay.vercel.app`.
+3. Add the Supabase callback URL shown by the project (`https://<project-ref>.supabase.co/auth/v1/callback`) to the Google OAuth client.
+4. Start Google sign-in from `/login` and confirm the callback returns to `/dashboard`.
+
+Do not commit Google client secrets, Supabase service-role keys, JWT secrets, database passwords, or other credentials. Store them only in Supabase, Vercel, Render, or local environment configuration.
+
+### Production smoke test
+
+After signing in with a test account:
+
+1. Open **Balances and currencies** and confirm wallet balances and ledger activity load.
+2. Open **Payments / Transfers**, choose a test recipient, and verify the displayed FX rate, fee, and converted amount.
+3. Submit a small internal test transfer and confirm its status and exact rate/fee appear in **Recent transfers**.
+4. Refresh the dashboard and confirm the balance and activity updates persist.
+
+### CI and deployment checks
+
+Run the backend checks locally with:
+
+```sh
+cd backend
+./mvnw clean test
+./mvnw package
+```
+
+GitHub Actions repeats the tests, packages the Spring Boot application, and builds the production Docker image on pushes to `main` and pull requests. A production release is ready only when the latest CI run is green and the Render health/readiness endpoints respond successfully.
+
+---
+
 ## Project Status
 
 Slash Pay currently includes:
