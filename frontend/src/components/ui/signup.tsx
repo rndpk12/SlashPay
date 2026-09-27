@@ -39,8 +39,13 @@ export default function Signup() {
       setError("Passwords do not match.");
       return;
     }
-    if (isBackendConfigured() && (!firstName.trim() || !/^[a-z]{2}$/i.test(country.trim()))) {
-      setError("Enter your first name and a two-letter country code, such as IN or US.");
+    if (
+      isBackendConfigured() &&
+      (!firstName.trim() || !/^[a-z]{2}$/i.test(country.trim()))
+    ) {
+      setError(
+        "Enter your first name and a two-letter country code, such as IN or US.",
+      );
       return;
     }
     setLoading(true);
@@ -135,7 +140,9 @@ export default function Signup() {
                     autoComplete="country"
                     placeholder="IN"
                     value={country}
-                    onChange={(event) => setCountry(event.target.value.toUpperCase())}
+                    onChange={(event) =>
+                      setCountry(event.target.value.toUpperCase())
+                    }
                     maxLength={2}
                     required
                   />

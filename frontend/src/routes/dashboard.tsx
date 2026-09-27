@@ -240,16 +240,25 @@ function DashboardPage() {
   }, []);
   const sectionZoom = activeSection === "Overview" ? 0.94 : 0.88;
   const sourceWallet = wallets.find((wallet) => wallet.currency === source);
-  const selectedRecipient = recipients.find((recipient) => recipient.id === recipientId);
+  const selectedRecipient = recipients.find(
+    (recipient) => recipient.id === recipientId,
+  );
   async function openTransferConfirmation() {
     setTransferError(null);
     setLockedQuote(null);
-    if (value <= 0) return setTransferError("Enter a positive transfer amount.");
-    if (!recipientId) return setTransferError("Select a recipient before sending this transfer.");
+    if (value <= 0)
+      return setTransferError("Enter a positive transfer amount.");
+    if (!recipientId)
+      return setTransferError(
+        "Select a recipient before sending this transfer.",
+      );
     if (getBackendToken()) {
-      if (!sourceWallet) return setTransferError(`Create a ${source} wallet before sending.`);
+      if (!sourceWallet)
+        return setTransferError(`Create a ${source} wallet before sending.`);
       if (Number(sourceWallet.balance) < value) {
-        return setTransferError(`Insufficient ${source} balance. Available: ${Number(sourceWallet.balance).toFixed(2)} ${source}.`);
+        return setTransferError(
+          `Insufficient ${source} balance. Available: ${Number(sourceWallet.balance).toFixed(2)} ${source}.`,
+        );
       }
       setQuoteLoading(true);
       try {
@@ -275,8 +284,15 @@ function DashboardPage() {
     setTransferError(null);
     try {
       if (getBackendToken()) {
-        if (!lockedQuote) throw new Error("Create a fresh quote before confirming this transfer.");
-        const transfer = await createBackendTransfer(recipientId, lockedQuote.id, value);
+        if (!lockedQuote)
+          throw new Error(
+            "Create a fresh quote before confirming this transfer.",
+          );
+        const transfer = await createBackendTransfer(
+          recipientId,
+          lockedQuote.id,
+          value,
+        );
         const recipient = recipients.find((item) => item.id === recipientId);
         setItems((current) => [
           {
@@ -379,8 +395,10 @@ function DashboardPage() {
   const filteredTransfers = items.filter((item) => {
     if (statusFilter !== "all" && item.status !== statusFilter) return false;
     const created = item.createdAt ? new Date(item.createdAt) : null;
-    if (dateFrom && (!created || created < new Date(`${dateFrom}T00:00:00`))) return false;
-    if (dateTo && (!created || created > new Date(`${dateTo}T23:59:59`))) return false;
+    if (dateFrom && (!created || created < new Date(`${dateFrom}T00:00:00`)))
+      return false;
+    if (dateTo && (!created || created > new Date(`${dateTo}T23:59:59`)))
+      return false;
     return true;
   });
   useEffect(() => {
@@ -412,25 +430,81 @@ function DashboardPage() {
               Confirm your transfer
             </h2>
             <div className="mt-6 grid gap-4 rounded-2xl bg-[#f5f7f3] p-4 text-sm">
-              <p><span className="text-[#747674]">Recipient</span><br /><strong>{selectedRecipient?.name ?? "Recipient"}</strong></p>
+              <p>
+                <span className="text-[#747674]">Recipient</span>
+                <br />
+                <strong>{selectedRecipient?.name ?? "Recipient"}</strong>
+              </p>
               <div className="grid grid-cols-2 gap-4">
-                <p><span className="text-[#747674]">You send</span><br /><strong>{(lockedQuote?.sourceAmount ?? value).toFixed(2)} {source}</strong></p>
-                <p><span className="text-[#747674]">Recipient gets</span><br /><strong>{(lockedQuote?.convertedAmount ?? received).toFixed(2)} {target}</strong></p>
+                <p>
+                  <span className="text-[#747674]">You send</span>
+                  <br />
+                  <strong>
+                    {(lockedQuote?.sourceAmount ?? value).toFixed(2)} {source}
+                  </strong>
+                </p>
+                <p>
+                  <span className="text-[#747674]">Recipient gets</span>
+                  <br />
+                  <strong>
+                    {(lockedQuote?.convertedAmount ?? received).toFixed(2)}{" "}
+                    {target}
+                  </strong>
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <p><span className="text-[#747674]">Rate</span><br /><strong>1 {source} = {(lockedQuote?.exchangeRate ?? rate).toFixed(4)} {target}</strong></p>
-                <p><span className="text-[#747674]">Fee</span><br /><strong>{(lockedQuote?.feeAmount ?? fee).toFixed(2)} {source}</strong></p>
+                <p>
+                  <span className="text-[#747674]">Rate</span>
+                  <br />
+                  <strong>
+                    1 {source} ={" "}
+                    {(lockedQuote?.exchangeRate ?? rate).toFixed(4)} {target}
+                  </strong>
+                </p>
+                <p>
+                  <span className="text-[#747674]">Fee</span>
+                  <br />
+                  <strong>
+                    {(lockedQuote?.feeAmount ?? fee).toFixed(2)} {source}
+                  </strong>
+                </p>
               </div>
               {getBackendToken() && (
-                <p><span className="text-[#747674]">Available {source} balance</span><br /><strong>{Number(sourceWallet?.balance ?? 0).toFixed(2)} {source}</strong></p>
+                <p>
+                  <span className="text-[#747674]">
+                    Available {source} balance
+                  </span>
+                  <br />
+                  <strong>
+                    {Number(sourceWallet?.balance ?? 0).toFixed(2)} {source}
+                  </strong>
+                </p>
               )}
             </div>
             <p className="mt-4 text-xs leading-5 text-[#747674]">
-              This creates an internal ledger transfer. It cannot be undone from this screen.
+              This creates an internal ledger transfer. It cannot be undone from
+              this screen.
             </p>
             <div className="mt-6 flex gap-3">
-              <button type="button" onClick={() => { setConfirmationOpen(false); setLockedQuote(null); }} disabled={sending} className="flex-1 rounded-full border border-[#cfd3cc] px-4 py-3 text-sm font-semibold">Cancel</button>
-              <button type="button" onClick={() => void send()} disabled={sending} className="flex-1 rounded-full bg-[#163300] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{sending ? "Sending…" : "Confirm transfer"}</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmationOpen(false);
+                  setLockedQuote(null);
+                }}
+                disabled={sending}
+                className="flex-1 rounded-full border border-[#cfd3cc] px-4 py-3 text-sm font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void send()}
+                disabled={sending}
+                className="flex-1 rounded-full bg-[#163300] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {sending ? "Sending…" : "Confirm transfer"}
+              </button>
             </div>
           </div>
         </div>
@@ -445,27 +519,107 @@ function DashboardPage() {
           <div className="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#57744a]">Transfer details</p>
-                <h2 id="transfer-details-title" className="mt-2 text-2xl font-bold">{selectedTransfer.recipientLabel || recipients.find((recipient) => recipient.id === selectedTransfer.recipientId)?.name || "Recipient"}</h2>
-                <p className="mt-1 text-xs text-[#747674]">{formatTransferDate(selectedTransfer.createdAt)}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#57744a]">
+                  Transfer details
+                </p>
+                <h2
+                  id="transfer-details-title"
+                  className="mt-2 text-2xl font-bold"
+                >
+                  {selectedTransfer.recipientLabel ||
+                    recipients.find(
+                      (recipient) =>
+                        recipient.id === selectedTransfer.recipientId,
+                    )?.name ||
+                    "Recipient"}
+                </h2>
+                <p className="mt-1 text-xs text-[#747674]">
+                  {formatTransferDate(selectedTransfer.createdAt)}
+                </p>
               </div>
-              <button type="button" onClick={() => setSelectedTransferId(null)} className="rounded-full px-3 py-1 text-xl text-[#747674] hover:bg-[#f4f5f3]" aria-label="Close transfer details">×</button>
+              <button
+                type="button"
+                onClick={() => setSelectedTransferId(null)}
+                className="rounded-full px-3 py-1 text-xl text-[#747674] hover:bg-[#f4f5f3]"
+                aria-label="Close transfer details"
+              >
+                ×
+              </button>
             </div>
             <div className="mt-6 grid gap-3 rounded-2xl bg-[#f5f7f3] p-4 text-sm">
               <div className="grid grid-cols-2 gap-4">
-                <p><span className="text-[#747674]">You sent</span><br /><strong>{selectedTransfer.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedTransfer.sourceCurrency || source}</strong></p>
-                <p><span className="text-[#747674]">Recipient gets</span><br /><strong>{selectedTransfer.targetAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedTransfer.targetCurrency || target}</strong></p>
+                <p>
+                  <span className="text-[#747674]">You sent</span>
+                  <br />
+                  <strong>
+                    {selectedTransfer.amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    {selectedTransfer.sourceCurrency || source}
+                  </strong>
+                </p>
+                <p>
+                  <span className="text-[#747674]">Recipient gets</span>
+                  <br />
+                  <strong>
+                    {selectedTransfer.targetAmount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    {selectedTransfer.targetCurrency || target}
+                  </strong>
+                </p>
               </div>
               {selectedQuote && (
                 <div className="grid grid-cols-2 gap-4 border-t border-[#e1e4df] pt-3">
-                  <p><span className="text-[#747674]">FX rate</span><br /><strong>1 {selectedQuote.fromCurrency} = {Number(selectedQuote.exchangeRate).toFixed(4)} {selectedQuote.toCurrency}</strong></p>
-                  <p><span className="text-[#747674]">Fee</span><br /><strong>{Number(selectedQuote.feeAmount).toFixed(2)} {selectedQuote.fromCurrency}</strong></p>
+                  <p>
+                    <span className="text-[#747674]">FX rate</span>
+                    <br />
+                    <strong>
+                      1 {selectedQuote.fromCurrency} ={" "}
+                      {Number(selectedQuote.exchangeRate).toFixed(4)}{" "}
+                      {selectedQuote.toCurrency}
+                    </strong>
+                  </p>
+                  <p>
+                    <span className="text-[#747674]">Fee</span>
+                    <br />
+                    <strong>
+                      {Number(selectedQuote.feeAmount).toFixed(2)}{" "}
+                      {selectedQuote.fromCurrency}
+                    </strong>
+                  </p>
                 </div>
               )}
               {!selectedQuote && selectedTransfer.exchangeRate && (
-                <div className="grid grid-cols-2 gap-4 border-t border-[#e1e4df] pt-3"><p><span className="text-[#747674]">FX rate</span><br /><strong>1 {selectedTransfer.sourceCurrency} = {selectedTransfer.exchangeRate.toFixed(4)} {selectedTransfer.targetCurrency}</strong></p><p><span className="text-[#747674]">Fee</span><br /><strong>{(selectedTransfer.feeAmount ?? 0).toFixed(2)} {selectedTransfer.sourceCurrency}</strong></p></div>
+                <div className="grid grid-cols-2 gap-4 border-t border-[#e1e4df] pt-3">
+                  <p>
+                    <span className="text-[#747674]">FX rate</span>
+                    <br />
+                    <strong>
+                      1 {selectedTransfer.sourceCurrency} ={" "}
+                      {selectedTransfer.exchangeRate.toFixed(4)}{" "}
+                      {selectedTransfer.targetCurrency}
+                    </strong>
+                  </p>
+                  <p>
+                    <span className="text-[#747674]">Fee</span>
+                    <br />
+                    <strong>
+                      {(selectedTransfer.feeAmount ?? 0).toFixed(2)}{" "}
+                      {selectedTransfer.sourceCurrency}
+                    </strong>
+                  </p>
+                </div>
               )}
-              <p><span className="text-[#747674]">Transfer ID</span><br /><strong className="break-all font-mono text-xs">{selectedTransfer.id}</strong></p>
+              <p>
+                <span className="text-[#747674]">Transfer ID</span>
+                <br />
+                <strong className="break-all font-mono text-xs">
+                  {selectedTransfer.id}
+                </strong>
+              </p>
             </div>
             <div className="mt-6">
               <p className="text-sm font-semibold">Status</p>
@@ -478,11 +632,33 @@ function DashboardPage() {
             </div>
             {selectedTransfer.status === "processing" && (
               <div className="mt-6 flex flex-wrap gap-2">
-                <button type="button" onClick={() => void updateTransferStatus(selectedTransfer.id, "completed")} className="rounded-full bg-[#9fe870] px-4 py-2 text-xs font-semibold text-[#163300]">Mark completed</button>
-                <button type="button" onClick={() => void updateTransferStatus(selectedTransfer.id, "failed")} className="rounded-full border border-[#c85b52] px-4 py-2 text-xs font-semibold text-[#b64940]">Mark failed</button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void updateTransferStatus(selectedTransfer.id, "completed")
+                  }
+                  className="rounded-full bg-[#9fe870] px-4 py-2 text-xs font-semibold text-[#163300]"
+                >
+                  Mark completed
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void updateTransferStatus(selectedTransfer.id, "failed")
+                  }
+                  className="rounded-full border border-[#c85b52] px-4 py-2 text-xs font-semibold text-[#b64940]"
+                >
+                  Mark failed
+                </button>
               </div>
             )}
-            <button type="button" onClick={() => setSelectedTransferId(null)} className="mt-6 w-full rounded-full border border-[#cfd3cc] px-4 py-3 text-sm font-semibold">Close</button>
+            <button
+              type="button"
+              onClick={() => setSelectedTransferId(null)}
+              className="mt-6 w-full rounded-full border border-[#cfd3cc] px-4 py-3 text-sm font-semibold"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
@@ -701,12 +877,16 @@ function DashboardPage() {
                       <p className="mt-1 text-[26px] font-bold">
                         {wallets.length
                           ? wallets
-                              .map((wallet) => `${wallet.currency} ${Number(wallet.balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}`)
+                              .map(
+                                (wallet) =>
+                                  `${wallet.currency} ${Number(wallet.balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+                              )
                               .join(" · ")
                           : "No wallets yet"}
                       </p>
                       <span className="mt-2 inline-block rounded-full bg-[#e4f7d7] px-2 py-1 text-xs font-semibold text-[#3f7a1d]">
-                        {wallets.length} active {wallets.length === 1 ? "wallet" : "wallets"}
+                        {wallets.length} active{" "}
+                        {wallets.length === 1 ? "wallet" : "wallets"}
                       </span>
                     </div>
                     <div className="hidden gap-4 text-xs text-[#747674] sm:flex">
@@ -732,10 +912,17 @@ function DashboardPage() {
                     ) : (
                       items.slice(0, 4).map((item) => (
                         <p key={item.id}>
-                          <strong>{item.status === "completed" ? "Completed transfer" : "Transfer"}</strong>
+                          <strong>
+                            {item.status === "completed"
+                              ? "Completed transfer"
+                              : "Transfer"}
+                          </strong>
                           <br />
                           <span className="text-[#747674]">
-                            {item.amount.toLocaleString()} {item.sourceCurrency} → {item.targetAmount.toLocaleString()} {item.targetCurrency} · {formatTransferDate(item.createdAt)}
+                            {item.amount.toLocaleString()} {item.sourceCurrency}{" "}
+                            → {item.targetAmount.toLocaleString()}{" "}
+                            {item.targetCurrency} ·{" "}
+                            {formatTransferDate(item.createdAt)}
                           </span>
                         </p>
                       ))
@@ -1014,7 +1201,11 @@ function DashboardPage() {
                     type="button"
                     className="mt-5 w-full rounded-full bg-[#9fe870] py-4 font-semibold text-[#163300] disabled:opacity-50"
                   >
-                    {quoteLoading ? "Getting quote..." : sending ? "Sending..." : "Send"}
+                    {quoteLoading
+                      ? "Getting quote..."
+                      : sending
+                        ? "Sending..."
+                        : "Send"}
                   </button>
                   {transferError && (
                     <p className="mt-3 rounded-xl bg-[#fff1ef] px-4 py-3 text-sm text-[#b44336]">
@@ -1030,18 +1221,36 @@ function DashboardPage() {
                     </span>
                   </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                    <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="rounded-xl border border-[#e1e4df] bg-white px-3 py-2 text-xs outline-none">
+                    <select
+                      value={statusFilter}
+                      onChange={(event) => setStatusFilter(event.target.value)}
+                      className="rounded-xl border border-[#e1e4df] bg-white px-3 py-2 text-xs outline-none"
+                    >
                       <option value="all">All statuses</option>
                       <option value="processing">Processing</option>
                       <option value="completed">Completed</option>
                       <option value="failed">Failed</option>
                     </select>
-                    <input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} aria-label="Transfers from date" className="rounded-xl border border-[#e1e4df] px-3 py-2 text-xs" />
-                    <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} aria-label="Transfers to date" className="rounded-xl border border-[#e1e4df] px-3 py-2 text-xs" />
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(event) => setDateFrom(event.target.value)}
+                      aria-label="Transfers from date"
+                      className="rounded-xl border border-[#e1e4df] px-3 py-2 text-xs"
+                    />
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(event) => setDateTo(event.target.value)}
+                      aria-label="Transfers to date"
+                      className="rounded-xl border border-[#e1e4df] px-3 py-2 text-xs"
+                    />
                   </div>
                   {filteredTransfers.length === 0 ? (
                     <p className="mt-4 text-sm text-[#747674]">
-                      {items.length === 0 ? "No transfers yet. Your completed sends will appear here." : "No transfers match these filters."}
+                      {items.length === 0
+                        ? "No transfers yet. Your completed sends will appear here."
+                        : "No transfers match these filters."}
                     </p>
                   ) : (
                     <div className="mt-3 divide-y divide-[#e6e8e4]">
@@ -1063,7 +1272,9 @@ function DashboardPage() {
                               {recipients.find(
                                 (recipient) =>
                                   recipient.id === item.recipientId,
-                              )?.name || item.recipientLabel || "Recipient"}
+                              )?.name ||
+                                item.recipientLabel ||
+                                "Recipient"}
                             </p>
                             <p className="font-semibold">
                               {item.amount.toLocaleString(undefined, {
@@ -1099,7 +1310,9 @@ function DashboardPage() {
           ) : activeSection === "Invoices" ? (
             <InvoicesSection />
           ) : activeSection === "Balances and currencies" ? (
-            <BalancesSection onWalletsChanged={() => void loadBackendWallets()} />
+            <BalancesSection
+              onWalletsChanged={() => void loadBackendWallets()}
+            />
           ) : activeSection === "Reports" ? (
             <ReportsSection />
           ) : activeSection === "Settings and security" ? (
@@ -1696,12 +1909,19 @@ function mapBackendActivity(transaction: BackendTransaction): BalanceActivity {
     amount,
     currency,
     detail,
-    createdAt: transaction.completedAt ?? transaction.createdAt ?? new Date().toISOString(),
+    createdAt:
+      transaction.completedAt ??
+      transaction.createdAt ??
+      new Date().toISOString(),
     status: transaction.status.toLowerCase(),
   };
 }
 
-function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }) {
+function BalancesSection({
+  onWalletsChanged,
+}: {
+  onWalletsChanged?: () => void;
+}) {
   const [balances, setBalances] = useState<BalanceRecord[]>([]);
   const [currency, setCurrency] = useState("USD");
   const [actionCurrency, setActionCurrency] = useState("USD");
@@ -1799,7 +2019,9 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
         setBalances((current) =>
           current.some((item) => item.id === record.id)
             ? current
-            : [...current, record].sort((a, b) => a.currency.localeCompare(b.currency)),
+            : [...current, record].sort((a, b) =>
+                a.currency.localeCompare(b.currency),
+              ),
         );
         setActionCurrency(wallet.currency);
         onWalletsChanged?.();
@@ -1858,7 +2080,9 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
     const balance = balances.find((item) => item.currency === actionCurrency);
     if (getBackendToken()) {
       if (!balance || !Number.isFinite(value) || value <= 0) {
-        setError(balance ? "Enter a positive amount." : "Add this currency first.");
+        setError(
+          balance ? "Enter a positive amount." : "Add this currency first.",
+        );
         return;
       }
       setSaving(true);
@@ -1874,12 +2098,14 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
           getBackendWallets(),
           getBackendTransactions(),
         ]);
-        setBalances(walletRows.map((wallet) => ({
-          id: wallet.id,
-          currency: wallet.currency,
-          available: Number(wallet.balance),
-          pending: 0,
-        })));
+        setBalances(
+          walletRows.map((wallet) => ({
+            id: wallet.id,
+            currency: wallet.currency,
+            available: Number(wallet.balance),
+            pending: 0,
+          })),
+        );
         setActivities(history.content.map(mapBackendActivity));
         setAmount("");
         onWalletsChanged?.();
@@ -1945,12 +2171,31 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
     0,
   );
   const totalPending = balances.reduce((sum, item) => sum + item.pending, 0);
-  const visibleActivities = activities.filter((activity) => activityCurrency === "all" || activity.currency === activityCurrency);
-  const pagedActivities = visibleActivities.slice(ledgerPage * ledgerPageSize, (ledgerPage + 1) * ledgerPageSize);
+  const visibleActivities = activities.filter(
+    (activity) =>
+      activityCurrency === "all" || activity.currency === activityCurrency,
+  );
+  const pagedActivities = visibleActivities.slice(
+    ledgerPage * ledgerPageSize,
+    (ledgerPage + 1) * ledgerPageSize,
+  );
   function exportLedger() {
     const header = "id,type,currency,amount,status,created_at";
-    const rows = visibleActivities.map((activity) => [activity.id, activity.kind, activity.currency, activity.amount.toFixed(2), activity.status ?? "", activity.createdAt].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","));
-    const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+    const rows = visibleActivities.map((activity) =>
+      [
+        activity.id,
+        activity.kind,
+        activity.currency,
+        activity.amount.toFixed(2),
+        activity.status ?? "",
+        activity.createdAt,
+      ]
+        .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+        .join(","),
+    );
+    const blob = new Blob([[header, ...rows].join("\n")], {
+      type: "text/csv;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -2014,8 +2259,24 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
       )}
       {receipt && (
         <div className="mt-4 rounded-xl border border-[#b9dca5] bg-[#f3fbeE] px-4 py-3 text-sm text-[#31551d]">
-          <div className="flex items-center justify-between gap-3"><strong>{receipt.status === "COMPLETED" ? "Operation completed" : "Operation receipt"}</strong><button type="button" onClick={() => setReceipt(null)} className="text-xs underline">Dismiss</button></div>
-          <p className="mt-1 text-xs">{receipt.transactionId} · {receipt.amount.toFixed(2)} {receipt.currency} · {new Date(receipt.createdAt).toLocaleString()}</p>
+          <div className="flex items-center justify-between gap-3">
+            <strong>
+              {receipt.status === "COMPLETED"
+                ? "Operation completed"
+                : "Operation receipt"}
+            </strong>
+            <button
+              type="button"
+              onClick={() => setReceipt(null)}
+              className="text-xs underline"
+            >
+              Dismiss
+            </button>
+          </div>
+          <p className="mt-1 text-xs">
+            {receipt.transactionId} · {receipt.amount.toFixed(2)}{" "}
+            {receipt.currency} · {new Date(receipt.createdAt).toLocaleString()}
+          </p>
         </div>
       )}
       <div className="mt-7 grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
@@ -2107,11 +2368,30 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
               Deposits, withdrawals, and transfers for this account.
             </p>
           </div>
-          <div className="flex items-center gap-2"><span className="text-xs text-[#747674]">{visibleActivities.length} items</span><button type="button" onClick={exportLedger} className="rounded-full border border-[#cfd3cc] px-3 py-1.5 text-xs font-semibold">Export CSV</button></div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#747674]">
+              {visibleActivities.length} items
+            </span>
+            <button
+              type="button"
+              onClick={exportLedger}
+              className="rounded-full border border-[#cfd3cc] px-3 py-1.5 text-xs font-semibold"
+            >
+              Export CSV
+            </button>
+          </div>
         </div>
-        <select value={activityCurrency} onChange={(event) => setActivityCurrency(event.target.value)} className="mt-4 rounded-xl border border-[#dfe2dd] bg-white px-3 py-2 text-xs outline-none">
+        <select
+          value={activityCurrency}
+          onChange={(event) => setActivityCurrency(event.target.value)}
+          className="mt-4 rounded-xl border border-[#dfe2dd] bg-white px-3 py-2 text-xs outline-none"
+        >
           <option value="all">All currencies</option>
-          {balances.map((item) => <option key={item.currency} value={item.currency}>{item.currency}</option>)}
+          {balances.map((item) => (
+            <option key={item.currency} value={item.currency}>
+              {item.currency}
+            </option>
+          ))}
         </select>
         {visibleActivities.length === 0 ? (
           <p className="mt-5 text-sm text-[#747674]">
@@ -2152,9 +2432,28 @@ function BalancesSection({ onWalletsChanged }: { onWalletsChanged?: () => void }
         )}
         {visibleActivities.length > ledgerPageSize && (
           <div className="mt-4 flex items-center justify-between border-t border-[#eef0ed] pt-3 text-xs">
-            <button type="button" disabled={ledgerPage === 0} onClick={() => setLedgerPage((page) => Math.max(0, page - 1))} className="rounded-full border border-[#cfd3cc] px-3 py-1.5 disabled:opacity-40">Previous</button>
-            <span className="text-[#747674]">Page {ledgerPage + 1} of {Math.ceil(visibleActivities.length / ledgerPageSize)}</span>
-            <button type="button" disabled={(ledgerPage + 1) * ledgerPageSize >= visibleActivities.length} onClick={() => setLedgerPage((page) => page + 1)} className="rounded-full border border-[#cfd3cc] px-3 py-1.5 disabled:opacity-40">Next</button>
+            <button
+              type="button"
+              disabled={ledgerPage === 0}
+              onClick={() => setLedgerPage((page) => Math.max(0, page - 1))}
+              className="rounded-full border border-[#cfd3cc] px-3 py-1.5 disabled:opacity-40"
+            >
+              Previous
+            </button>
+            <span className="text-[#747674]">
+              Page {ledgerPage + 1} of{" "}
+              {Math.ceil(visibleActivities.length / ledgerPageSize)}
+            </span>
+            <button
+              type="button"
+              disabled={
+                (ledgerPage + 1) * ledgerPageSize >= visibleActivities.length
+              }
+              onClick={() => setLedgerPage((page) => page + 1)}
+              className="rounded-full border border-[#cfd3cc] px-3 py-1.5 disabled:opacity-40"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>
@@ -2641,20 +2940,31 @@ function RecipientsSection({
       if (recipientResult.data) setRecipients(recipientResult.data);
       if (accountResult.data) setAccounts(accountResult.data);
     });
-  }, []);
+  }, [backendMode]);
   async function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (backendMode) {
       if (!form.email.trim()) {
-        setRecipientError("Enter the email address of an existing Cross Pay user.");
+        setRecipientError(
+          "Enter the email address of an existing Cross Pay user.",
+        );
         return;
       }
       setSaving(true);
       try {
         const row = await createBackendRecipient(form.email.trim());
-        setRecipients((current) => [mapBackendRecipientForSection(row), ...current.filter((item) => item.id !== row.recipientUserId)]);
+        setRecipients((current) => [
+          mapBackendRecipientForSection(row),
+          ...current.filter((item) => item.id !== row.recipientUserId),
+        ]);
         setRecipientError(null);
-        setForm({ name: "", email: "", country: "", currency: "EUR", account: "" });
+        setForm({
+          name: "",
+          email: "",
+          country: "",
+          currency: "EUR",
+          account: "",
+        });
         setShowForm(false);
         onRecipientsChanged?.();
       } catch (error) {
@@ -2851,7 +3161,9 @@ function RecipientsSection({
           <input
             type="email"
             required={backendMode}
-            placeholder={backendMode ? "Existing Cross Pay user email" : "Email (optional)"}
+            placeholder={
+              backendMode ? "Existing Cross Pay user email" : "Email (optional)"
+            }
             value={form.email}
             onChange={(event) =>
               setForm({ ...form, email: event.target.value })
@@ -2926,7 +3238,8 @@ function RecipientsSection({
           )}
           {backendMode && (
             <p className="text-xs text-[#747674] sm:col-span-2">
-              The recipient must already have a Cross Pay account. Their internal account is used for transfers.
+              The recipient must already have a Cross Pay account. Their
+              internal account is used for transfers.
             </p>
           )}
         </form>
@@ -3257,21 +3570,31 @@ function formatTransferError(error: unknown) {
   return "Unable to save this transfer. Check your Supabase connection and try again.";
 }
 
-function mapBackendTransaction(transaction: BackendTransaction): DashboardTransfer {
+function mapBackendTransaction(
+  transaction: BackendTransaction,
+): DashboardTransfer {
   const shortRecipientId = transaction.recipientUserId?.slice(0, 8);
   return {
     id: transaction.transactionId,
     amount: Number(transaction.sourceAmount ?? transaction.amount ?? 0),
-    targetAmount: Number(transaction.destinationAmount ?? transaction.amount ?? 0),
+    targetAmount: Number(
+      transaction.destinationAmount ?? transaction.amount ?? 0,
+    ),
     status: transaction.status.toLowerCase(),
     recipientId: transaction.recipientUserId,
-    recipientLabel: shortRecipientId ? `Recipient ${shortRecipientId}` : "Recipient",
+    recipientLabel: shortRecipientId
+      ? `Recipient ${shortRecipientId}`
+      : "Recipient",
     createdAt: transaction.completedAt ?? transaction.createdAt ?? undefined,
     sourceCurrency: transaction.sourceCurrency ?? undefined,
     targetCurrency: transaction.destinationCurrency ?? undefined,
     quoteId: transaction.fxQuoteId ?? undefined,
-    exchangeRate: transaction.exchangeRate == null ? undefined : Number(transaction.exchangeRate),
-    feeAmount: transaction.feeAmount == null ? undefined : Number(transaction.feeAmount),
+    exchangeRate:
+      transaction.exchangeRate == null
+        ? undefined
+        : Number(transaction.exchangeRate),
+    feeAmount:
+      transaction.feeAmount == null ? undefined : Number(transaction.feeAmount),
   };
 }
 

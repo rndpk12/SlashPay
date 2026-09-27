@@ -36,7 +36,11 @@ export default function Login2() {
         await loginWithBackend(email.trim(), password);
         navigate({ to: "/dashboard" });
       } catch (loginError) {
-        setError(loginError instanceof Error ? loginError.message : "Unable to sign in.");
+        setError(
+          loginError instanceof Error
+            ? loginError.message
+            : "Unable to sign in.",
+        );
       } finally {
         setLoading(false);
       }

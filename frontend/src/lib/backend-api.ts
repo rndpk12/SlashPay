@@ -1,4 +1,6 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL as string | undefined
+)?.replace(/\/$/, "");
 
 const TOKEN_KEY = "slash-pay.backend.access-token";
 const EMAIL_KEY = "slash-pay.backend.email";
@@ -76,16 +78,26 @@ function saveBackendSession(accessToken: string, email: string) {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  if (!API_BASE_URL) throw new Error("The local API is not configured. Set VITE_API_BASE_URL first.");
+  if (!API_BASE_URL)
+    throw new Error(
+      "The local API is not configured. Set VITE_API_BASE_URL first.",
+    );
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
-  if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (init.body && !headers.has("Content-Type"))
+    headers.set("Content-Type", "application/json");
   const token = getBackendToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const message = body && typeof body === "object" && "message" in body && typeof body.message === "string" ? body.message : `Request failed (${response.status}).`;
+    const message =
+      body &&
+      typeof body === "object" &&
+      "message" in body &&
+      typeof body.message === "string"
+        ? body.message
+        : `Request failed (${response.status}).`;
     throw new Error(message);
   }
   return body as T;
@@ -112,12 +124,26 @@ export function registerWithBackend(input: {
   });
 }
 
-export async function getBackendTransactions(options: { page?: number; size?: number; status?: string; from?: string; to?: string } = {}) {
-  const params = new URLSearchParams({ page: String(options.page ?? 0), size: String(options.size ?? 100) });
-  if (options.status && options.status !== "all") params.set("status", options.status);
+export async function getBackendTransactions(
+  options: {
+    page?: number;
+    size?: number;
+    status?: string;
+    from?: string;
+    to?: string;
+  } = {},
+) {
+  const params = new URLSearchParams({
+    page: String(options.page ?? 0),
+    size: String(options.size ?? 100),
+  });
+  if (options.status && options.status !== "all")
+    params.set("status", options.status);
   if (options.from) params.set("from", options.from);
   if (options.to) params.set("to", options.to);
-  return request<TransactionHistoryResponse>(`/api/v1/transactions?${params.toString()}`);
+  return request<TransactionHistoryResponse>(
+    `/api/v1/transactions?${params.toString()}`,
+  );
 }
 
 export function getBackendRecipients() {
@@ -132,7 +158,9 @@ export function createBackendRecipient(email: string) {
 }
 
 export function deleteBackendRecipient(recipientUserId: string) {
-  return request<void>(`/api/v1/recipients/${recipientUserId}`, { method: "DELETE" });
+  return request<void>(`/api/v1/recipients/${recipientUserId}`, {
+    method: "DELETE",
+  });
 }
 
 export type BackendQuote = {
@@ -159,7 +187,11 @@ type BackendTransfer = {
   createdAt: string;
 };
 
-export function createBackendQuote(amount: number, fromCurrency: string, toCurrency: string) {
+export function createBackendQuote(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+) {
   return request<BackendQuote>("/api/v1/fx/quotes", {
     method: "POST",
     body: JSON.stringify({ amount, fromCurrency, toCurrency }),
@@ -170,7 +202,11 @@ export function getBackendQuote(quoteId: string) {
   return request<BackendQuote>(`/api/v1/fx/quotes/${quoteId}`);
 }
 
-export function createBackendTransfer(recipientUserId: string, quoteId: string, amount: number) {
+export function createBackendTransfer(
+  recipientUserId: string,
+  quoteId: string,
+  amount: number,
+) {
   return request<BackendTransfer>("/api/v1/transfers", {
     method: "POST",
     headers: { "Idempotency-Key": crypto.randomUUID() },
@@ -194,9 +230,12 @@ export function createBackendBalanceOperation(
   amount: number,
   currency: string,
 ) {
-  return request<BackendOperationReceipt>(`/api/v1/${type === "deposit" ? "deposits" : "withdrawals"}`, {
-    method: "POST",
-    headers: { "Idempotency-Key": crypto.randomUUID() },
-    body: JSON.stringify({ amount, currency }),
-  });
+  return request<BackendOperationReceipt>(
+    `/api/v1/${type === "deposit" ? "deposits" : "withdrawals"}`,
+    {
+      method: "POST",
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+      body: JSON.stringify({ amount, currency }),
+    },
+  );
 }
